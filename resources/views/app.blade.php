@@ -31,14 +31,14 @@
         }
     </style>
 
-    <title inertia>{{ config('app.name', 'Kaldis Coffee') }}</title>
+    <title inertia>{{ config('app.name', 'Trattoria Gusto') }}</title>
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <meta name="description" content="Kaldis Coffee Company Management System">
+    <meta name="description" content="Trattoria Gusto Management System">
     <meta name="theme-color" content="#1e3a5f">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <meta name="apple-mobile-web-app-title" content="Kaldis">
+    <meta name="apple-mobile-web-app-title" content="Trattoria Gusto">
 
     <link rel="icon" href="/favicon.ico" sizes="any">
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">

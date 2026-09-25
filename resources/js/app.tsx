@@ -9,7 +9,7 @@ import { OfflineProvider } from './hooks/use-offline';
 import { syncService } from './lib/syncService';
 import { registerSW } from 'virtual:pwa-register';
 
-const appName = 'Kaldis coffee';
+const appName = import.meta.env.VITE_APP_NAME || 'Trattoria Gusto';
 
 createInertiaApp({
     title: (title) => title ? `${title} - ${appName}` : appName,

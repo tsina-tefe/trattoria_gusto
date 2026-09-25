@@ -2,7 +2,7 @@
  * IndexedDB wrapper for offline data storage
  */
 
-const DB_NAME = 'KaldisOfflineDB';
+const DB_NAME = 'TrattoriaGustoOfflineDB';
 const DB_VERSION = 1;
 
 // Store names

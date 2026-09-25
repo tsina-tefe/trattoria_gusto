@@ -18,9 +18,9 @@ export default defineConfig({
             registerType: 'autoUpdate',
             includeAssets: ['favicon.ico', 'favicon.svg', 'images/logo.png'],
             manifest: {
-                name: 'Kaldis Coffee System',
-                short_name: 'Kaldis',
-                description: 'Kaldis Coffee Company Management System',
+                name: 'Trattoria Gusto System',
+                short_name: 'Trattoria',
+                description: 'Trattoria Gusto Management System',
                 theme_color: '#1e3a5f',
                 background_color: '#ffffff',
                 display: 'standalone',

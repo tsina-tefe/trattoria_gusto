@@ -35,7 +35,7 @@ class TestGeezSMS extends Command
         
         // Send test SMS
         $this->info("Sending test SMS to {$phone}...");
-        $message = "This is a test message from KALDIS pre-order system. SMS is working! 🎉";
+        $message = "This is a test message from the Trattoria Gusto system. SMS is working! 🎉";
         
         $result = $geezSmsService->sendMessage($phone, $message);
         
