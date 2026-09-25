@@ -73,6 +73,8 @@ export default function Branches({ branches, request }: { branches: { data: Bran
                                     <TableHead className="font-bold text-white">Branch Code</TableHead>
                                     <TableHead className="font-bold text-white">Name</TableHead>
                                     <TableHead className="font-bold text-white">Location</TableHead>
+                                    <TableHead className="font-bold text-white">Status</TableHead>
+                                    <TableHead className="font-bold text-white">Sales</TableHead>
                                     <TableHead className="font-bold text-white">Departments</TableHead>
                                     <TableHead className="font-bold text-white">Created At</TableHead>
                                     <TableHead className="font-bold text-white">Actions</TableHead>
@@ -86,6 +88,8 @@ export default function Branches({ branches, request }: { branches: { data: Bran
                                         <TableCell>{branch.branch_code}</TableCell>
                                         <TableCell>{branch.name}</TableCell>
                                         <TableCell>{branch.location || 'N/A'}</TableCell>
+                                        <TableCell className="capitalize">{branch.status ?? 'active'}</TableCell>
+                                        <TableCell>{branch.is_sales_generating ? 'Yes' : 'No'}</TableCell>
                                         <TableCell className="flex flex-wrap items-center gap-2">
                                             {branch.departments.length > 0 ? (
                                                 branch.departments.map((dept, index) => (

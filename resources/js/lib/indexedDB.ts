@@ -3,11 +3,10 @@
  */
 
 const DB_NAME = 'TrattoriaGustoOfflineDB';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 
 // Store names
 export const STORES = {
-    INVENTORY_COUNTS: 'inventoryCounts',
     EVALUATIONS: 'evaluations',
     SYNC_QUEUE: 'syncQueue',
     CACHED_DATA: 'cachedData',
@@ -52,18 +51,8 @@ class IndexedDBWrapper {
             request.onupgradeneeded = (event) => {
                 const db = (event.target as IDBOpenDBRequest).result;
 
-                // Create inventory counts store
-                if (!db.objectStoreNames.contains(STORES.INVENTORY_COUNTS)) {
-                    const inventoryStore = db.createObjectStore(STORES.INVENTORY_COUNTS, {
-                        keyPath: 'localId',
-                        autoIncrement: true,
-                    });
-                    inventoryStore.createIndex('product_id', 'product_id', { unique: false });
-                    inventoryStore.createIndex('branch_id', 'branch_id', { unique: false });
-                    inventoryStore.createIndex('inventory_period_id', 'inventory_period_id', {
-                        unique: false,
-                    });
-                    inventoryStore.createIndex('synced', 'synced', { unique: false });
+                if (db.objectStoreNames.contains('inventoryCounts')) {
+                    db.deleteObjectStore('inventoryCounts');
                 }
 
                 // Create evaluations store

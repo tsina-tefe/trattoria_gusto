@@ -25,6 +25,8 @@ class BranchController extends Controller
                     'branch_code' => $branch->branch_code,
                     'name' => $branch->name,
                     'location' => $branch->location,
+                    'is_sales_generating' => $branch->is_sales_generating,
+                    'status' => $branch->status,
                     'created_at' => $branch->created_at->format('d-m-Y'),
                     'departments' => $branch->departments->pluck('name')
                 ];
@@ -52,6 +54,8 @@ class BranchController extends Controller
             'contact_email' => 'nullable|email|max:150',
             'contact_phone' => 'nullable|string|max:20',
             'description' => 'nullable|string',
+            'is_sales_generating' => 'boolean',
+            'status' => 'required|in:active,inactive',
             'departments' => 'array',
             'departments.*' => 'string|exists:departments,name'
         ]);
@@ -63,6 +67,8 @@ class BranchController extends Controller
             'contact_email',
             'contact_phone',
             'description',
+            'is_sales_generating',
+            'status',
         ]));
 
         if ($request->has('departments')) {
@@ -86,6 +92,8 @@ class BranchController extends Controller
             'contact_email' => $branch->contact_email,
             'contact_phone' => $branch->contact_phone,
             'description' => $branch->description,
+            'is_sales_generating' => $branch->is_sales_generating,
+            'status' => $branch->status,
             'created_at' => $branch->created_at?->format('d-m-Y'),
             'departments' => $branch->departments->pluck('name'),
         ];
@@ -110,6 +118,8 @@ class BranchController extends Controller
             'contact_email' => 'nullable|email|max:150',
             'contact_phone' => 'nullable|string|max:20',
             'description' => 'nullable|string',
+            'is_sales_generating' => 'boolean',
+            'status' => 'required|in:active,inactive',
             'departments' => 'array',
             'departments.*' => 'string|exists:departments,name'
         ]);
@@ -121,6 +131,8 @@ class BranchController extends Controller
             'contact_email',
             'contact_phone',
             'description',
+            'is_sales_generating',
+            'status',
         ]));
 
         if ($request->has('departments')) {

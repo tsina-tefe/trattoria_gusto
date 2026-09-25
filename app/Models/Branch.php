@@ -15,13 +15,11 @@ class Branch extends Model
         static::saved(function () {
             Cache::forget('branches_all');
             Cache::forget('branches_all_sorted');
-            Cache::forget('branches_inventory_tracking');
             Cache::forget('sales_budget_active_branches');
         });
         static::deleted(function () {
             Cache::forget('branches_all');
             Cache::forget('branches_all_sorted');
-            Cache::forget('branches_inventory_tracking');
             Cache::forget('sales_budget_active_branches');
         });
     }

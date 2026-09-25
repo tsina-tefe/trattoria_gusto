@@ -20,18 +20,24 @@ class DatabaseSeeder extends Seeder
             PermissionSeeder::class,
             RoleSeeder::class,
             ExpenseItemSeeder::class,
+            EvaluationCategorySeeder::class,
         ]);
 
         $branch = Branch::firstOrCreate(
             ['branch_code' => 'HQ-001'],
             [
                 'name' => 'Head Office',
+                'status' => 'active',
+                'is_sales_generating' => false,
             ]
         );
 
         $department = Department::firstOrCreate(
             ['name' => 'Administration'],
-            ['is_active' => true]
+            [
+                'is_active' => true,
+                'is_active_on_weekly_budget' => false,
+            ]
         );
 
         $position = Position::firstOrCreate(

@@ -86,9 +86,6 @@ export class SyncService {
             await syncQueue.updateItemStatus(item.id, 'syncing');
 
             switch (item.entity) {
-                case STORES.INVENTORY_COUNTS:
-                    await this.syncInventoryCount(item);
-                    break;
                 case STORES.EVALUATIONS:
                     await this.syncEvaluation(item);
                     break;
@@ -105,51 +102,6 @@ export class SyncService {
                 'failed',
                 error.message || 'Unknown error',
             );
-        }
-    }
-
-    /**
-     * Sync inventory count item
-     */
-    private async syncInventoryCount(item: SyncQueueItem): Promise<void> {
-        const endpoint = '/sync/inventory-counts';
-
-        try {
-            const response = await axios.post(endpoint, {
-                type: item.type,
-                data: item.data,
-                timestamp: item.timestamp,
-            });
-
-            // Update local storage with server response
-            if (response.data.id && item.data.localId) {
-                const localItem = await db.get(STORES.INVENTORY_COUNTS, item.data.localId);
-                if (localItem) {
-                    await db.put(STORES.INVENTORY_COUNTS, {
-                        ...localItem,
-                        id: response.data.id,
-                        synced: true,
-                        syncedAt: Date.now(),
-                    });
-                }
-            }
-        } catch (error: any) {
-            // Handle conflict (409) - item already exists
-            if (error.response?.status === 409) {
-                console.log('Item already synced, marking as completed');
-                if (item.data.localId) {
-                    const localItem = await db.get(STORES.INVENTORY_COUNTS, item.data.localId);
-                    if (localItem) {
-                        await db.put(STORES.INVENTORY_COUNTS, {
-                            ...localItem,
-                            synced: true,
-                            syncedAt: Date.now(),
-                        });
-                    }
-                }
-                return;
-            }
-            throw error;
         }
     }
 

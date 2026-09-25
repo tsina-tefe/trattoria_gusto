@@ -71,7 +71,7 @@ export default function Departments({ departments, request }: { departments: { d
                             <TableHead className="font-bold text-white">ID</TableHead>
                             <TableHead className="font-bold text-white">Name</TableHead>
                             <TableHead className="font-bold text-white">Description</TableHead>
-                            <TableHead className="font-bold text-white">Active (Ticketing)</TableHead>
+                            <TableHead className="font-bold text-white">Weekly Budget</TableHead>
                             <TableHead className="font-bold text-white">Created At</TableHead>
                             <TableHead className="font-bold text-white">Actions</TableHead>
                         </TableRow>
@@ -83,7 +83,7 @@ export default function Departments({ departments, request }: { departments: { d
                                 <TableCell>{index + 1}</TableCell>
                                 <TableCell>{department.name}</TableCell>
                                 <TableCell>{department.description || 'N/A'}</TableCell>
-                                <TableCell>{(department as any).is_active_on_ticketing ? 'Yes' : 'No'}</TableCell>
+                                <TableCell>{department.is_active_on_weekly_budget ? 'Yes' : 'No'}</TableCell>
                                 <TableCell>{department.created_at}</TableCell>
                                         <TableCell>
                                             {can('update departments') && (

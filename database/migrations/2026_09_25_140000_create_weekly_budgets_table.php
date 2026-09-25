@@ -34,8 +34,16 @@ return new class extends Migration
             $table->text('note')->nullable();
             $table->unsignedBigInteger('created_by');
             $table->timestamps();
-            $table->unsignedBigInteger('payment_type_id')->nullable();
+            // Same type as expenses.expense_parent_acc_code so an InnoDB
+            // foreign key is legal. The column is nullable because a request
+            // can be saved before finance picks a payment type.
+            $table->integer('payment_type_id')->nullable();
             $table->unsignedBigInteger('payment_category_id')->nullable();
+
+            $table->foreign('payment_type_id')
+                ->references('expense_parent_acc_code')
+                ->on('expenses')
+                ->nullOnDelete();
 
             $table->index(['request_type', 'status_finance', 'status_ceo']);
             $table->index(['department_id', 'branch_id']);

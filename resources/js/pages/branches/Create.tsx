@@ -28,6 +28,8 @@ export default function CreateBranch({ departments }: { departments: string[] })
         contact_email: '',
         contact_phone: '',
         description: '',
+        is_sales_generating: false,
+        status: 'active' as 'active' | 'inactive',
         departments: [] as string[],
     });
 
@@ -123,6 +125,29 @@ export default function CreateBranch({ departments }: { departments: string[] })
                                     placeholder="Enter description (optional)"
                                 />
                                 <InputError message={errors.description} />
+                            </div>
+                            <div className="mb-4 flex items-center gap-2">
+                                <input
+                                    id="is_sales_generating"
+                                    type="checkbox"
+                                    checked={data.is_sales_generating}
+                                    onChange={(e) => setData('is_sales_generating', e.target.checked)}
+                                />
+                                <Label htmlFor="is_sales_generating">Sales generating</Label>
+                                <InputError message={errors.is_sales_generating} />
+                            </div>
+                            <div className="mb-4">
+                                <Label htmlFor="status">Status</Label>
+                                <select
+                                    id="status"
+                                    className="mt-1 block w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                    value={data.status}
+                                    onChange={(e) => setData('status', e.target.value as 'active' | 'inactive')}
+                                >
+                                    <option value="active">Active</option>
+                                    <option value="inactive">Inactive</option>
+                                </select>
+                                <InputError message={errors.status} />
                             </div>
                             <Label>Select Departments</Label>
                             <div className="my-4">

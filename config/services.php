@@ -39,10 +39,4 @@ return [
         'key' => env('POWER_BI_API_KEY'),
     ],
 
-    'geezsms' => [
-        'token' => env('GEEZSMS_TOKEN'),
-        'shortcode_id' => env('GEEZSMS_SHORTCODE_ID'),
-        'callback_url' => env('GEEZSMS_CALLBACK_URL'),
-    ],
-
 ];

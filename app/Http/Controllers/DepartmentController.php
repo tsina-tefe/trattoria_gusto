@@ -37,7 +37,7 @@ class DepartmentController extends Controller
             'name' => 'required|string|max:100',
             'description' => 'nullable|string',
             'is_active' => 'boolean',
-            'is_active_on_ticketing' => 'boolean',
+            'is_active_on_weekly_budget' => 'boolean',
         ]);
 
         Department::create($validated);
@@ -59,7 +59,7 @@ class DepartmentController extends Controller
             'name' => 'required|string|max:100',
             'description' => 'nullable|string',
             'is_active' => 'boolean',
-            'is_active_on_ticketing' => 'boolean',
+            'is_active_on_weekly_budget' => 'boolean',
         ]);
 
         $department->update($validated);

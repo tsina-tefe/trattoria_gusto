@@ -60,7 +60,7 @@ You should see:
 Create a new `.env.production` file with these settings:
 
 ```env
-APP_NAME="Kaldis Coffee"
+APP_NAME="Trattoria Gusto"
 APP_ENV=production
 APP_KEY=base64:YOUR_KEY_HERE
 APP_DEBUG=false
@@ -142,7 +142,7 @@ ASSET_URL=https://yourdomain.com
 
 1. **In Plesk, go to:** Databases
 2. **Create new database:**
-   - Database name: `kaldis_coffee`
+   - Database name: `trattoria_gusto`
    - User: Create new user with strong password
    - Grant all privileges
 3. **Note down:** Database name, username, and password
@@ -312,13 +312,13 @@ The `.htaccess` in `public/` folder should have:
 4. **Check Application tab:**
    - ✅ Service Workers → Should show "sw.js" activated
    - ✅ Manifest → Should show app details
-   - ✅ Storage → IndexedDB → Should see "KaldisOfflineDB"
+   - ✅ Storage → IndexedDB → Should see "TrattoriaGustoOfflineDB"
 
 ### 3. Test Offline Functionality
 
-1. **Navigate to Inventory Counts → Create**
+1. **Navigate to My Evaluation and open a form**
 2. **Open DevTools → Network tab → Set to "Offline"**
-3. **Enter some counts**
+3. **Enter some evaluation responses**
 4. **Verify:**
    - ✅ Offline banner appears
    - ✅ "Saved offline" messages show
@@ -406,7 +406,6 @@ Visit: `https://yourdomain.com/build/manifest.json`
 2. Check service worker is registered (DevTools → Application)
 3. Check IndexedDB permissions in browser
 4. Verify sync API routes are accessible:
-   - `POST /sync/inventory-counts`
    - `POST /sync/evaluations`
 5. Check Laravel logs for sync errors
 

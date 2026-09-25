@@ -81,6 +81,10 @@ class ManagerController extends Controller
 
         $manager = Manager::create([
             'employee_id' => $validated['employee_id'],
+            'branch_id' => $validated['branch_id'] ?? null,
+            'department_id' => $validated['department_id'] ?? null,
+            'manager_type' => ! empty($validated['department_id']) ? 'department' : 'branch',
+            'status' => 'active',
         ]);
 
         if (!empty($validated['team_members'])) {
@@ -127,6 +131,10 @@ class ManagerController extends Controller
                 'employee_id' => $manager->employee_id,
                 'employee_name' => $manager->employee->first_name . ' ' . $manager->employee->last_name,
                 'team_members' => $manager->teamMembers->pluck('id')->toArray(),
+                'branch_id' => $manager->branch_id,
+                'department_id' => $manager->department_id,
+                'manager_type' => $manager->manager_type,
+                'status' => $manager->status,
             ],
             'employees' => $employees,
             'branches' => $branches,
@@ -146,6 +154,9 @@ class ManagerController extends Controller
 
         $manager->update([
             'employee_id' => $validated['employee_id'],
+            'branch_id' => $validated['branch_id'] ?? null,
+            'department_id' => $validated['department_id'] ?? null,
+            'manager_type' => ! empty($validated['department_id']) ? 'department' : 'branch',
         ]);
 
         $manager->teamMembers()->sync($validated['team_members'] ?? []);

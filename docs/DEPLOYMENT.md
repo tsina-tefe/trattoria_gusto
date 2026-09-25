@@ -23,7 +23,7 @@ APP_NAME="Your App Name"
 APP_ENV=production
 APP_KEY=base64:YourAppKeyHere
 APP_DEBUG=false
-APP_URL=https://systems.kaldisbunna.et
+APP_URL=https://yourdomain.com
 
 # ... rest of your production settings
 ```
@@ -135,7 +135,7 @@ APP_NAME="Company System"
 APP_ENV=production
 APP_KEY=base64:YourGeneratedKeyHere
 APP_DEBUG=false
-APP_URL=https://systems.kaldisbunna.et
+APP_URL=https://yourdomain.com
 
 DB_CONNECTION=mysql
 DB_HOST=127.0.0.1
@@ -154,7 +154,7 @@ MAIL_PORT=587
 MAIL_USERNAME=your-email
 MAIL_PASSWORD=your-email-password
 MAIL_ENCRYPTION=tls
-MAIL_FROM_ADDRESS="noreply@kaldisbunna.et"
+MAIL_FROM_ADDRESS="noreply@yourdomain.com"
 MAIL_FROM_NAME="${APP_NAME}"
 ```
 

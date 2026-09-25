@@ -2,7 +2,7 @@
 
 ## What's New?
 
-Your Kaldis Coffee System now works offline! You can continue entering inventory counts and evaluations even without internet connection. All changes will automatically sync when you're back online.
+The app works offline for evaluations. You can continue entering evaluation responses without an internet connection. Changes sync automatically when you are back online.
 
 ## Key Features
 
@@ -34,8 +34,8 @@ php artisan view:clear
 1. Open your browser DevTools (F12)
 2. Go to Network tab
 3. Set network to "Offline"
-4. Navigate to Inventory Counts → Create
-5. Enter some counts
+4. Navigate to My Evaluation and open a form
+5. Enter some responses
 6. See "Saved offline" messages
 7. Set network back to "Online"
 8. Watch automatic sync
@@ -92,7 +92,7 @@ Click the refresh button (🔄) next to sync status to manually trigger sync.
 ## Storage Limits
 
 - **Typical**: 50-100 MB per browser
-- **Enough for**: Thousands of inventory counts
+- **Enough for**: Thousands of evaluation responses
 - **Auto cleanup**: Synced data is cleaned up
 
 ## FAQ
@@ -116,7 +116,7 @@ A: No! It works automatically. Just use the app normally.
 
 After deployment, test these scenarios:
 
-- [ ] Create inventory count offline
+- [ ] Create an evaluation response offline
 - [ ] See offline banner
 - [ ] See "Saved offline" message
 - [ ] Reconnect and see auto-sync

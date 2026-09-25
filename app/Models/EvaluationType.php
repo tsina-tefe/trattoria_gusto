@@ -15,8 +15,8 @@ class EvaluationType extends Model
         'evaluation_type',
     ];
 
-    public function evaluationResponses(): HasMany
+    public function questions(): HasMany
     {
-        return $this->hasMany(EvaluationResponse::class);
+        return $this->hasMany(Question::class);
     }
 }

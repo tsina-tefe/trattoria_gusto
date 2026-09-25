@@ -136,12 +136,14 @@ class EvaluationResponseController extends Controller
     public function create()
     {
         $evaluationPeriods = EvaluationPeriod::where('status', 'active')->get();
+        $evaluations = Evaluation::orderBy('name')->get(['id', 'name']);
         $evaluationTypes = EvaluationType::all();
         $users = User::with('employee')->get();
         $questions = Question::where('status', 'active')->get();
 
-        return Inertia::render('evaluation-responses/create', [
+        return Inertia::render('evaluation-records/create', [
             'evaluationPeriods' => $evaluationPeriods,
+            'evaluations' => $evaluations,
             'evaluationTypes' => $evaluationTypes,
             'users' => $users,
             'questions' => $questions,
@@ -152,9 +154,10 @@ class EvaluationResponseController extends Controller
     {
         $validated = $request->validate([
             'evaluator_id' => 'required|exists:users,id',
-            'evaluate_id' => 'required|exists:users,id',
+            'evaluate_id' => 'required|integer',
+            'evaluable_type' => 'required|in:employee,department,branch,other',
+            'evaluation_id' => 'required|exists:evaluations,id',
             'evaluation_period_id' => 'required|exists:evaluation_periods,id',
-            'evaluation_type_id' => 'required|exists:evaluation_types,id',
             'comment' => 'nullable|string',
             'question_responses' => 'required|array|min:1',
             'question_responses.*.question_id' => 'required|exists:questions,id',
@@ -164,8 +167,9 @@ class EvaluationResponseController extends Controller
         $evaluationResponse = EvaluationResponse::create([
             'evaluator_id' => $validated['evaluator_id'],
             'evaluate_id' => $validated['evaluate_id'],
+            'evaluable_type' => $validated['evaluable_type'],
+            'evaluation_id' => $validated['evaluation_id'],
             'evaluation_period_id' => $validated['evaluation_period_id'],
-            'evaluation_type_id' => $validated['evaluation_type_id'],
             'comment' => $validated['comment'],
         ]);
 

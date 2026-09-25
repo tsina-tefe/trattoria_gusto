@@ -139,34 +139,6 @@ class PermissionSeeder extends Seeder
         // Branch Manager Evaluation Summary
         Permission::firstOrCreate(['name' => 'view branch manager evaluation summary']);
 
-
-
-
-        // Inventory Periods
-        Permission::firstOrCreate(['name' => 'view inventory periods']);
-        Permission::firstOrCreate(['name' => 'create inventory periods']);
-        Permission::firstOrCreate(['name' => 'update inventory periods']);
-        Permission::firstOrCreate(['name' => 'delete inventory periods']);
-
-
-        // Inventory Completion Tracking
-        Permission::firstOrCreate(['name' => 'view inventory completion tracking']);
-
-
-        // Order Types
-        Permission::firstOrCreate(['name' => 'view order types']);
-        Permission::firstOrCreate(['name' => 'create order types']);
-        Permission::firstOrCreate(['name' => 'update order types']);
-        Permission::firstOrCreate(['name' => 'delete order types']);
-
-
-        Permission::firstOrCreate(['name' => 'send bulk sms reminders']); // Send bulk SMS reminders for pending orders
-
-        // SMS Balance & Management
-        Permission::firstOrCreate(['name' => 'view sms balance']);
-        Permission::firstOrCreate(['name' => 'manage sms settings']); // Activate/Deactivate SMS service
-
-        Permission::firstOrCreate(['name' => 'collect branch orders']);
         // Evaluation Records Management (Global)
         Permission::firstOrCreate(['name' => 'view evaluation records']);
         Permission::firstOrCreate(['name' => 'update evaluation records']);

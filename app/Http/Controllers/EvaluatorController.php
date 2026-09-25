@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Evaluation;
 use App\Models\EvaluationResponse;
-use App\Models\Question;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
@@ -43,10 +42,10 @@ class EvaluatorController extends Controller
             abort(403, 'You are not authorized to evaluate this evaluation.');
         }
 
-        // Get questions for this evaluation
-        $questions = Question::where('evaluation_type_id', $evaluation->evaluatorGroup->questionGroup->evaluation_type_id)
-            ->where('status', 'active')
-            ->get();
+        // Questions belong to the group's pivot, not to a type column on question_groups.
+        $questions = $evaluation->evaluatorGroup->questionGroup
+            ? $evaluation->evaluatorGroup->questionGroup->questions()->where('questions.status', 'active')->get()
+            : collect();
 
         // Get existing response if any
         $existingResponse = EvaluationResponse::where('evaluation_id', $evaluation->id)
@@ -127,6 +126,7 @@ class EvaluatorController extends Controller
             'evaluation_id' => $evaluation->id,
             'evaluator_id' => $user->id,
             'evaluate_id' => $validated['evaluate_id'],
+            'evaluable_type' => $evaluation->evaluatesGroup?->evaluable_type ?? 'employee',
             'comment' => $validated['comment'],
         ]);
 

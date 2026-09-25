@@ -13,14 +13,27 @@ class Manager extends Model
 
     protected $fillable = [
         'employee_id',
+        'manager_type',
+        'branch_id',
+        'department_id',
+        'status',
+        'effective_from',
+        'effective_to',
     ];
 
-    /**
-     * The employee who is the manager.
-     */
     public function employee(): BelongsTo
     {
         return $this->belongsTo(Employee::class);
+    }
+
+    public function branch(): BelongsTo
+    {
+        return $this->belongsTo(Branch::class);
+    }
+
+    public function department(): BelongsTo
+    {
+        return $this->belongsTo(Department::class);
     }
 
     /**

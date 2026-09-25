@@ -23,6 +23,7 @@ import type { PageProps } from '@/types';
 
 type Props = PageProps & {
     evaluationPeriods: EvaluationPeriod[];
+    evaluations: { id: number; name: string }[];
     evaluationTypes: EvaluationType[];
     users: User[];
     questions: Question[];
@@ -33,12 +34,13 @@ interface QuestionResponse {
     score: string;
 }
 
-export default function Create({ evaluationPeriods, evaluationTypes, users, questions }: Props) {
+export default function Create({ evaluationPeriods, evaluations, evaluationTypes, users, questions }: Props) {
     const { data, setData, post, processing, errors, reset } = useForm({
         evaluator_id: '',
         evaluate_id: '',
+        evaluable_type: 'employee',
+        evaluation_id: '',
         evaluation_period_id: '',
-        evaluation_type_id: '',
         comment: '',
         question_responses: [] as QuestionResponse[],
     });
@@ -56,10 +58,6 @@ export default function Create({ evaluationPeriods, evaluationTypes, users, ques
 
     const handleEvaluationTypeChange = (value: string) => {
         setSelectedEvaluationType(value);
-        setData('evaluation_type_id', value);
-        // Filter questions based on evaluation type
-        const filteredQuestions = questions.filter(q => q.evaluation_type_id === parseInt(value));
-        // Reset question responses
         setData('question_responses', []);
     };
 
@@ -160,10 +158,43 @@ export default function Create({ evaluationPeriods, evaluationTypes, users, ques
                                 </div>
 
                                 <div className="space-y-2">
-                                    <Label htmlFor="evaluation_type_id">Evaluation Type</Label>
-                                    <Select value={data.evaluation_type_id} onValueChange={handleEvaluationTypeChange}>
-                                        <SelectTrigger className={errors.evaluation_type_id ? 'border-red-500' : ''}>
-                                            <SelectValue placeholder="Select evaluation type" />
+                                    <Label htmlFor="evaluation_id">Evaluation</Label>
+                                    <Select value={data.evaluation_id} onValueChange={(value) => setData('evaluation_id', value)}>
+                                        <SelectTrigger className={errors.evaluation_id ? 'border-red-500' : ''}>
+                                            <SelectValue placeholder="Select evaluation" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {evaluations.map((evaluation) => (
+                                                <SelectItem key={evaluation.id} value={evaluation.id.toString()}>
+                                                    {evaluation.name}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                    <InputError message={errors.evaluation_id} />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label htmlFor="evaluable_type">Evaluable type</Label>
+                                    <Select value={data.evaluable_type} onValueChange={(value) => setData('evaluable_type', value)}>
+                                        <SelectTrigger className={errors.evaluable_type ? 'border-red-500' : ''}>
+                                            <SelectValue placeholder="Select type" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="employee">Employee</SelectItem>
+                                            <SelectItem value="department">Department</SelectItem>
+                                            <SelectItem value="branch">Branch</SelectItem>
+                                            <SelectItem value="other">Other</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                    <InputError message={errors.evaluable_type} />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label htmlFor="question_type_filter">Question type filter</Label>
+                                    <Select value={selectedEvaluationType} onValueChange={handleEvaluationTypeChange}>
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="All question types" />
                                         </SelectTrigger>
                                         <SelectContent>
                                             {evaluationTypes.map((type) => (
@@ -173,7 +204,6 @@ export default function Create({ evaluationPeriods, evaluationTypes, users, ques
                                             ))}
                                         </SelectContent>
                                     </Select>
-                                    <InputError message={errors.evaluation_type_id} />
                                 </div>
                             </div>
 

@@ -11,10 +11,6 @@ return new class extends Migration
         Schema::create('expense_budget_activity_logs', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('expense_budget_id');
-            // Retained from the era when budgets had separate line items. The
-            // logger still writes it, and historical rows in the source system
-            // carry values, so the column stays.
-            $table->unsignedBigInteger('expense_budget_item_id')->nullable();
             $table->unsignedBigInteger('user_id')->nullable();
             $table->string('action', 120);
             $table->string('summary', 500);
