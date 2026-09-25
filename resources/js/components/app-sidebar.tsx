@@ -128,7 +128,17 @@ const baseSections: NavSection[] = [
     label: 'Budget',
     icon: Wallet,
     items: [],
-    groups: [],
+    groups: [
+      {
+        label: 'Sales Budget',
+        icon: TrendingUp,
+        items: [
+          { title: 'All Sales Budgets', href: '/budget/sales-budget', icon: List, permission: 'view sales budget' },
+          { title: 'Add Sales Budget', href: '/budget/sales-budget/create', icon: Plus, permission: 'manage sales budget' },
+          { title: 'Activity Logs', href: '/budget/sales-budget/logs', icon: History, permission: 'manage sales budget' },
+        ],
+      },
+    ],
   },
   {
     label: 'Performance Evaluation',

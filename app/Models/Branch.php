@@ -34,6 +34,7 @@ class Branch extends Model
         'contact_phone',
         'description',
         'is_sales_generating',
+        'status',
     ];
 
     protected $casts = [

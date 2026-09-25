@@ -180,6 +180,8 @@ class PermissionSeeder extends Seeder
         Permission::firstOrCreate(['name' => 'manage external links']);
         Permission::firstOrCreate(['name' => 'view employee directory']);
 
-
+        // Budget :: Sales Budget
+        Permission::firstOrCreate(['name' => 'view sales budget']);
+        Permission::firstOrCreate(['name' => 'manage sales budget']);
     }
 }
