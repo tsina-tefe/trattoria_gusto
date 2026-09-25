@@ -6,6 +6,7 @@ use App\Models\ExpenseBudgetPeriod;
 use App\Models\FiscalMonth;
 use App\Models\FiscalYear;
 use App\Models\User;
+use App\Models\WeeklyBudgetNotification;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Spatie\Permission\Models\Permission;
@@ -113,6 +114,29 @@ class BudgetSmokeTest extends TestCase
         $this->actingAs(User::factory()->create());
 
         $this->get($url)->assertForbidden();
+    }
+
+    public function test_notifications_are_reachable_by_any_authenticated_user(): void
+    {
+        $this->actingAs(User::factory()->create());
+
+        $this->get('/weekly-budget-notifications')->assertSuccessful();
+    }
+
+    public function test_a_user_cannot_mark_another_users_notification_read(): void
+    {
+        $owner = User::factory()->create();
+        $notification = WeeklyBudgetNotification::create([
+            'user_id' => $owner->id,
+            'type' => 'budget.ceo',
+            'title' => 'Weekly Budgets Ready for Review',
+        ]);
+
+        $this->actingAs(User::factory()->create());
+
+        $this->post("/weekly-budget-notifications/mark-read/{$notification->id}")->assertForbidden();
+
+        $this->assertNull($notification->fresh()->read_at);
     }
 
     public function test_pages_require_authentication(): void

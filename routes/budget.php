@@ -7,6 +7,7 @@ use App\Http\Controllers\ExpenseBudgetController;
 use App\Http\Controllers\ExpenseBudgetPeriodController;
 use App\Http\Controllers\SalesBudgetController;
 use App\Http\Controllers\WeeklyBudgetController;
+use App\Http\Controllers\WeeklyBudgetNotificationController;
 use App\Http\Controllers\WeeklyBudgetPeriodController;
 use Illuminate\Support\Facades\Route;
 
@@ -137,4 +138,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('weekly-budget-periods', [WeeklyBudgetPeriodController::class, 'index'])->name('weekly-budget-periods.index');
         Route::post('weekly-budget-periods', [WeeklyBudgetPeriodController::class, 'store'])->name('weekly-budget-periods.store');
     });
+
+    // Every authenticated user can reach their own notifications; the
+    // controller scopes each query to the signed-in user.
+    Route::get('weekly-budget-notifications', [WeeklyBudgetNotificationController::class, 'index'])
+        ->name('weekly-budget-notifications.index');
+    Route::post('weekly-budget-notifications/mark-read/{notification?}', [WeeklyBudgetNotificationController::class, 'markRead'])
+        ->name('weekly-budget-notifications.mark-read');
+    Route::delete('weekly-budget-notifications', [WeeklyBudgetNotificationController::class, 'clear'])
+        ->name('weekly-budget-notifications.clear');
 });
