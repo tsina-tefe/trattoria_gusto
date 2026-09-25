@@ -19,6 +19,11 @@ return new class extends Migration
             $table->string('password');
             $table->rememberToken();
             $table->timestamps();
+            // Employees is created later, so this is an unsigned id rather than
+            // a live foreign key. The current database has no foreign keys at
+            // all (MyISAM), so this matches the live schema.
+            $table->unsignedBigInteger('employee_id')->nullable();
+            $table->index('employee_id', 'users_employee_id_foreign');
         });
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {

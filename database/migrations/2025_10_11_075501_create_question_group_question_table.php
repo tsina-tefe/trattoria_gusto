@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('question_group_id')->constrained('question_groups')->onDelete('cascade');
             $table->foreignId('question_id')->constrained('questions')->onDelete('cascade');
+            $table->decimal('weight', 5, 2)->default(1.0); // Weight within the group
             $table->unique(['question_group_id', 'question_id']);
             $table->timestamps();
         });

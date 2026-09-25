@@ -16,7 +16,11 @@ return new class extends Migration
             $table->string('contact_email', 150)->nullable();
             $table->string('contact_phone', 20)->nullable();
             $table->text('description')->nullable();
+            $table->boolean('is_sales_generating')->default(false);
+            $table->enum('status', ['active', 'inactive'])->default('active');
             $table->timestamps();
+
+            $table->index(['status', 'name'], 'branches_status_name_index');
         });
     }
 

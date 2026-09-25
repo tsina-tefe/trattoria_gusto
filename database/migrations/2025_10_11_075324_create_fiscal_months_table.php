@@ -18,7 +18,6 @@ return new class extends Migration
             $table->integer('efy_month_number'); // 1-12
             $table->date('gregorian_start_date');
             $table->date('gregorian_end_date');
-            $table->boolean('is_active')->default(false);
             $table->timestamps();
         });
     }

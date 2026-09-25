@@ -15,6 +15,8 @@ return new class extends Migration
             $table->id();
             $table->string('name', 100);
             $table->text('description')->nullable();
+            $table->boolean('is_active')->default(true);
+            $table->boolean('is_active_on_weekly_budget')->default(false);
             $table->timestamps();
         });
     }

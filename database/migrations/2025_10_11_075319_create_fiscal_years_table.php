@@ -16,7 +16,6 @@ return new class extends Migration
             $table->string('name'); // e.g., 'EFY 2018'
             $table->date('gregorian_start_date');
             $table->date('gregorian_end_date');
-            $table->boolean('is_active')->default(false);
             $table->timestamps();
         });
     }
