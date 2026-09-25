@@ -60,6 +60,14 @@ class BudgetSmokeTest extends TestCase
         $manageExpenseBudgets = ['manage expense budget anytime'];
 
         return [
+            'weekly budget index' => ['/budget/weekly-budget', ['view weekly budgets']],
+            'weekly budget create' => ['/budget/weekly-budget/create', ['manage weekly budgets']],
+            'weekly budget department view' => ['/budget/weekly-budget/department', ['view department budgets']],
+            'weekly budget finance view' => ['/budget/weekly-budget/finance', ['view finance budgets']],
+            'weekly budget ceo view' => ['/budget/weekly-budget/ceo', ['view ceo budgets']],
+            'weekly budget analytics' => ['/budget/weekly-budget/analytics', ['view weekly budget summary']],
+            'weekly budget periods index' => ['/weekly-budget-periods', ['manage weekly budget periods']],
+            'weekly budget export' => ['/budget/weekly-budget/export', ['view weekly budgets']],
             'banks index' => ['/budget/banks', ['manage banks']],
             'bank branches index' => ['/budget/bank-branches', ['manage bank branches']],
             // The route middleware also admits 'view bank balance', but the

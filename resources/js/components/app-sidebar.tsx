@@ -130,6 +130,19 @@ const baseSections: NavSection[] = [
     items: [],
     groups: [
       {
+        label: 'Weekly Budget',
+        icon: CalendarCheck,
+        items: [
+          { title: 'All Requests', href: '/budget/weekly-budget', icon: List, permission: 'view weekly budgets' },
+          { title: 'New Request', href: '/budget/weekly-budget/create', icon: Plus, permission: 'manage weekly budgets' },
+          { title: 'Department Review', href: '/budget/weekly-budget/department', icon: Users, permission: 'view department budgets' },
+          { title: 'Finance Review', href: '/budget/weekly-budget/finance', icon: Wallet, permission: 'view finance budgets' },
+          { title: 'CEO Review', href: '/budget/weekly-budget/ceo', icon: ShieldCheck, permission: 'view ceo budgets' },
+          { title: 'Analytics', href: '/budget/weekly-budget/analytics', icon: BarChart3, permission: 'view weekly budget summary' },
+          { title: 'Budget Periods', href: '/weekly-budget-periods', icon: CalendarDays, permission: 'manage weekly budget periods' },
+        ],
+      },
+      {
         label: 'Bank Balance',
         icon: Building2,
         items: [

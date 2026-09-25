@@ -197,5 +197,21 @@ class PermissionSeeder extends Seeder
         Permission::firstOrCreate(['name' => 'manage bank branches']);
         Permission::firstOrCreate(['name' => 'view bank balance']);
         Permission::firstOrCreate(['name' => 'manage bank balance']);
+
+        // Budget :: Weekly Budget
+        Permission::firstOrCreate(['name' => 'view weekly budgets']);
+        Permission::firstOrCreate(['name' => 'manage weekly budgets']);
+        Permission::firstOrCreate(['name' => 'manage weekly budgets admin']);
+        Permission::firstOrCreate(['name' => 'view weekly budget summary']);
+        Permission::firstOrCreate(['name' => 'view weekly budget activity logs']);
+        Permission::firstOrCreate(['name' => 'manage weekly budget periods']);
+
+        // One view/manage pair per reviewer in the approval chain.
+        Permission::firstOrCreate(['name' => 'view department budgets']);
+        Permission::firstOrCreate(['name' => 'manage department budgets']);
+        Permission::firstOrCreate(['name' => 'view finance budgets']);
+        Permission::firstOrCreate(['name' => 'manage finance budgets']);
+        Permission::firstOrCreate(['name' => 'view ceo budgets']);
+        Permission::firstOrCreate(['name' => 'manage ceo budgets']);
     }
 }
