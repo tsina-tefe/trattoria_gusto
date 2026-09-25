@@ -33,15 +33,15 @@ class Branch extends Model
         'contact_email',
         'contact_phone',
         'description',
+        'is_sales_generating',
+    ];
+
+    protected $casts = [
+        'is_sales_generating' => 'boolean',
     ];
 
     public function departments()
     {
         return $this->belongsToMany(Department::class);
-    }
-
-    public function preOrders()
-    {
-        return $this->hasMany(PreOrder::class, 'collection_branch_id');
     }
 }

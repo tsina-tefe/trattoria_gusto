@@ -106,11 +106,4 @@ class User extends Authenticatable
             ->toArray();
     }
 
-    /**
-     * Pre-orders created by this user.
-     */
-    public function preOrders(): HasMany
-    {
-        return $this->hasMany(PreOrder::class, 'created_by');
-    }
 }

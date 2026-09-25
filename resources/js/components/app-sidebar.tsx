@@ -123,6 +123,14 @@ const baseSections: NavSection[] = [
     ],
   },
   {
+    // Sub-modules are appended as each phase lands. NavMain hides the whole
+    // section while no item passes the permission filter.
+    label: 'Budget',
+    icon: Wallet,
+    items: [],
+    groups: [],
+  },
+  {
     label: 'Performance Evaluation',
     icon: TrendingUp,
     items: [

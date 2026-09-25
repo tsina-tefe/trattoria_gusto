@@ -4,7 +4,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class ExpenseItem extends Model
 {
@@ -34,10 +33,5 @@ class ExpenseItem extends Model
     public function getNameAttribute(): string
     {
         return $this->expense_type;
-    }
-
-    public function budgetItems(): HasMany
-    {
-        return $this->hasMany(ExpenseBudgetItem::class, 'expense_item_id', 'expense_parent_acc_code');
     }
 }

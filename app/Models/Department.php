@@ -20,8 +20,14 @@ class Department extends Model
         'name',
         'description',
         'is_active',
-        'is_active_on_ticketing',
+        'is_active_on_weekly_budget',
     ];
+
+    protected $casts = [
+        'is_active' => 'boolean',
+        'is_active_on_weekly_budget' => 'boolean',
+    ];
+
     public function branches()
     {
         return $this->belongsToMany(Branch::class);
