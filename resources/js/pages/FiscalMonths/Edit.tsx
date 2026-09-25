@@ -1,0 +1,160 @@
+import { Head, Link, useForm } from '@inertiajs/react';
+import AppLayout from '@/layouts/app-layout';
+import { Button } from '@/components/ui/button';
+import { Card, CardAction, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
+import { type BreadcrumbItem } from '@/types';
+import type { FiscalMonth, EthiopianMonth } from '@/types/fiscal-month';
+import type { FiscalYear } from '@/types/fiscal-year';
+
+type Props = {
+    fiscalMonth: FiscalMonth;
+    fiscalYears: FiscalYear[];
+    ethiopianMonths: Record<number, EthiopianMonth>;
+};
+
+export default function Edit({ fiscalMonth, fiscalYears, ethiopianMonths }: Props) {
+    const { data, setData, put, processing, errors } = useForm({
+        fiscal_year_id: fiscalMonth.fiscal_year_id.toString(),
+        name: fiscalMonth.name,
+        efy_month_number: fiscalMonth.efy_month_number.toString(),
+        gregorian_start_date: fiscalMonth.gregorian_start_date,
+        gregorian_end_date: fiscalMonth.gregorian_end_date,
+    });
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        put(route('fiscal-months.update', fiscalMonth.id));
+    };
+
+    const handleMonthSelect = (monthNumber: string) => {
+        setData('efy_month_number', monthNumber);
+        if (ethiopianMonths[parseInt(monthNumber)]) {
+            setData('name', ethiopianMonths[parseInt(monthNumber)].en);
+        }
+    };
+
+    const breadcrumbs: BreadcrumbItem[] = [
+        { title: 'Ethiopian Fiscal Months', href: '/fiscal-months' },
+        { title: 'Edit Fiscal Month', href: `/fiscal-months/${fiscalMonth.id}/edit` },
+    ];
+
+    return (
+        <AppLayout breadcrumbs={breadcrumbs}>
+            <Head title="Edit Fiscal Month" />
+
+            <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
+                <Card>
+                    <CardHeader className="flex items-center justify-between">
+                        <CardTitle>Edit Ethiopian Fiscal Month</CardTitle>
+                        <CardAction>
+                            <Link href={'/fiscal-months'}>
+                                <Button variant={'default'}>Go Back</Button>
+                            </Link>
+                        </CardAction>
+                    </CardHeader>
+                    <hr />
+                    <CardContent>
+                    <form onSubmit={handleSubmit} className="space-y-6">
+                        <div className="space-y-2">
+                            <Label htmlFor="fiscal_year_id">Fiscal Year</Label>
+                            <Select value={data.fiscal_year_id} onValueChange={(value) => setData('fiscal_year_id', value)}>
+                                <SelectTrigger className={errors.fiscal_year_id ? 'border-red-500' : ''}>
+                                    <SelectValue placeholder="Select fiscal year" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {fiscalYears.map((year) => (
+                                        <SelectItem key={year.id} value={year.id.toString()}>
+                                            {year.name} ({year.gregorian_start_date} to {year.gregorian_end_date})
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            {errors.fiscal_year_id && <p className="text-sm text-red-500">{errors.fiscal_year_id}</p>}
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="efy_month_number">Ethiopian Month</Label>
+                            <Select value={data.efy_month_number} onValueChange={handleMonthSelect}>
+                                <SelectTrigger className={errors.efy_month_number ? 'border-red-500' : ''}>
+                                    <SelectValue placeholder="Select month" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {Object.entries(ethiopianMonths).map(([num, month]) => (
+                                        <SelectItem key={num} value={num}>
+                                            {num}. {month.en} ({month.am})
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            {errors.efy_month_number && <p className="text-sm text-red-500">{errors.efy_month_number}</p>}
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="name">Month Name</Label>
+                            <Input
+                                id="name"
+                                value={data.name}
+                                onChange={(e) => setData('name', e.target.value)}
+                                placeholder="e.g., Hamle"
+                                className={errors.name ? 'border-red-500' : ''}
+                            />
+                            {errors.name && <p className="text-sm text-red-500">{errors.name}</p>}
+                        </div>
+
+                        <div className="grid gap-6 md:grid-cols-2">
+                            <div className="space-y-2">
+                                <Label htmlFor="gregorian_start_date">Gregorian Start Date</Label>
+                                <Input
+                                    id="gregorian_start_date"
+                                    type="date"
+                                    value={data.gregorian_start_date}
+                                    onChange={(e) => setData('gregorian_start_date', e.target.value)}
+                                    className={errors.gregorian_start_date ? 'border-red-500' : ''}
+                                />
+                                {errors.gregorian_start_date && (
+                                    <p className="text-sm text-red-500">{errors.gregorian_start_date}</p>
+                                )}
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="gregorian_end_date">Gregorian End Date</Label>
+                                <Input
+                                    id="gregorian_end_date"
+                                    type="date"
+                                    value={data.gregorian_end_date}
+                                    onChange={(e) => setData('gregorian_end_date', e.target.value)}
+                                    className={errors.gregorian_end_date ? 'border-red-500' : ''}
+                                />
+                                {errors.gregorian_end_date && (
+                                    <p className="text-sm text-red-500">{errors.gregorian_end_date}</p>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Status removed */}
+
+                        <div className="flex justify-end gap-4">
+                            <Button type="submit" disabled={processing}>
+                                {processing ? 'Updating...' : 'Update Fiscal Month'}
+                            </Button>
+                            <Button type="button" variant="outline" asChild>
+                                <Link href={'/fiscal-months'}>Cancel</Link>
+                            </Button>
+                        </div>
+                    </form>
+                    </CardContent>
+                </Card>
+            </div>
+        </AppLayout>
+    );
+}
+
