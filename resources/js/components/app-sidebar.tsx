@@ -130,6 +130,39 @@ const baseSections: NavSection[] = [
     items: [],
     groups: [
       {
+        label: 'Expense Budget',
+        icon: ClipboardList,
+        items: [
+          {
+            title: 'All Expense Budgets',
+            href: '/budget/expense-budget',
+            icon: List,
+            permission:
+              'view only own department expense budgets|view only own branch expense budgets|view all branches except HO expense budgets',
+          },
+          {
+            title: 'Add Expense Budget',
+            href: '/budget/expense-budget/create',
+            icon: Plus,
+            permission:
+              'view only own department expense budgets|view only own branch expense budgets|view all branches except HO expense budgets',
+          },
+          {
+            title: 'Submission Tracker',
+            href: '/budget/expense-budget/submission-tracker',
+            icon: ClipboardCheck,
+            permission:
+              'view only own department expense budgets|view only own branch expense budgets|view all branches except HO expense budgets',
+          },
+          {
+            title: 'Budget Periods',
+            href: '/expense-budget-periods',
+            icon: CalendarDays,
+            permission: 'manage expense budget anytime|manage expense budget within time window',
+          },
+        ],
+      },
+      {
         label: 'Sales Budget',
         icon: TrendingUp,
         items: [

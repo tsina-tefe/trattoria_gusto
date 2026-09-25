@@ -1,0 +1,245 @@
+<?php
+
+namespace App\Support;
+
+use App\Models\Branch;
+use App\Models\ExpenseBudget;
+use App\Models\User;
+use Carbon\CarbonInterface;
+
+class ExpenseBudgetAccess
+{
+    public static function manageAnytimePermission(): string
+    {
+        return (string) config('expense_budget.permissions.manage_anytime', 'manage expense budget anytime');
+    }
+
+    public static function manageWindowedPermission(): string
+    {
+        return (string) config('expense_budget.permissions.manage_windowed', 'manage expense budget within time window');
+    }
+
+    public static function viewOwnDepartmentPermission(): string
+    {
+        return (string) config('expense_budget.permissions.view_own_department', 'view only own department expense budgets');
+    }
+
+    public static function viewOwnBranchPermission(): string
+    {
+        return (string) config('expense_budget.permissions.view_own_branch', 'view only own branch expense budgets');
+    }
+
+    public static function viewAllExceptHOPermission(): string
+    {
+        return (string) config('expense_budget.permissions.view_all_except_ho', 'view all branches except HO expense budgets');
+    }
+
+    public static function canView(?User $user = null): bool
+    {
+        $user ??= auth()->user();
+
+        if (! $user) {
+            return false;
+        }
+
+        return $user->can(self::viewOwnDepartmentPermission())
+            || $user->can(self::viewOwnBranchPermission())
+            || $user->can(self::viewAllExceptHOPermission());
+    }
+
+    public static function hasManagePermission(?User $user = null): bool
+    {
+        $user ??= auth()->user();
+
+        if (! $user) {
+            return false;
+        }
+
+        return $user->can(self::manageAnytimePermission())
+            || $user->can(self::manageWindowedPermission());
+    }
+
+    public static function canManage(?User $user = null): bool
+    {
+        $user ??= auth()->user();
+
+        if (! $user) {
+            return false;
+        }
+
+        if ($user->can(self::manageAnytimePermission())) {
+            return true;
+        }
+
+        if ($user->can(self::manageWindowedPermission())) {
+            return self::isWithinManageWindow();
+        }
+
+        return false;
+    }
+
+    public static function canViewItemHistory(?User $user, ExpenseBudget $budget): bool
+    {
+        if (! self::canView($user)) {
+            return false;
+        }
+
+        if (self::hasUnrestrictedViewAccess($user)) {
+            return true;
+        }
+
+        return self::canViewBudgetHistory($user, $budget);
+    }
+
+    public static function canViewBudgetHistory(?User $user, ExpenseBudget $budget): bool
+    {
+        if (! $user || ! self::canView($user)) {
+            return false;
+        }
+
+        if (self::hasUnrestrictedViewAccess($user)) {
+            return true;
+        }
+
+        $budget->loadMissing('branch');
+
+        if ($user->hasRole('Department Manager')) {
+            if (! self::isHeadOfficeBranch($budget->branch) || ! $budget->department_id) {
+                return false;
+            }
+
+            return $user->isManagerOfDepartment((int) $budget->department_id);
+        }
+
+        if ($user->hasRole('Branch Manager')) {
+            if (self::isHeadOfficeBranch($budget->branch)) {
+                return false;
+            }
+
+            $userBranchId = $user->employee?->branch_id;
+
+            return $userBranchId && (int) $budget->branch_id === (int) $userBranchId;
+        }
+
+        if ($user->can(self::viewOwnDepartmentPermission())) {
+            $userDeptId = $user->employee?->department_id;
+            return $userDeptId && (int) $budget->department_id === (int) $userDeptId;
+        }
+
+        if ($user->can(self::viewOwnBranchPermission())) {
+            $userBranchId = $user->employee?->branch_id;
+            if ($userBranchId && (int) $budget->branch_id === (int) $userBranchId) {
+                if (self::isHeadOfficeBranch($budget->branch)) {
+                    return (int) $budget->department_id === (int) $user->employee?->department_id;
+                }
+                return true;
+            }
+        }
+
+        if ($user->can(self::viewAllExceptHOPermission())) {
+            return ! self::isHeadOfficeBranch($budget->branch);
+        }
+
+        return false;
+    }
+
+    public static function hasUnrestrictedViewAccess(?User $user): bool
+    {
+        if (! $user) {
+            return false;
+        }
+
+        return $user->can(self::manageAnytimePermission());
+    }
+
+    public static function getEthiopianDate(\Carbon\CarbonInterface $date): array
+    {
+        $gregorianYear = $date->year;
+        $gregorianMonth = $date->month;
+        $gregorianDay = $date->day;
+
+        $a = floor((14 - $gregorianMonth) / 12);
+        $y = $gregorianYear + 4800 - $a;
+        $m = $gregorianMonth + 12 * $a - 3;
+        $jdn = $gregorianDay +
+            floor((153 * $m + 2) / 5) +
+            365 * $y +
+            floor($y / 4) -
+            floor($y / 100) +
+            floor($y / 400) -
+            32045;
+
+        $r = ($jdn - 1723856) % 1461;
+        $n = ($r % 365) + floor($r / 1460);
+        
+        $ethiopianYear = 4 * floor(($jdn - 1723856) / 1461) + floor($r / 365) - floor($r / 1460);
+        $ethiopianMonth = floor($n / 30) + 1;
+        $ethiopianDay = ($n % 30) + 1;
+        
+        return [
+            'year' => (int) $ethiopianYear,
+            'month' => (int) $ethiopianMonth,
+            'day' => (int) $ethiopianDay
+        ];
+    }
+
+    public static function isWithinManageWindow(?CarbonInterface $date = null): bool
+    {
+        $date ??= now();
+        $startDay = (int) config('expense_budget.manage_window.start_day', 26);
+        $endDay = (int) config('expense_budget.manage_window.end_day', 2);
+        
+        $ethDate = self::getEthiopianDate($date);
+        $ethiopianDay = $ethDate['day'];
+        $ethiopianMonth = $ethDate['month'];
+
+        if ($ethiopianMonth === 13) {
+            return true;
+        }
+
+        if ($startDay > $endDay) {
+            return $ethiopianDay >= $startDay || $ethiopianDay <= $endDay;
+        }
+
+        return $ethiopianDay >= $startDay && $ethiopianDay <= $endDay;
+    }
+
+    public static function manageDeniedMessage(): string
+    {
+        $user = auth()->user();
+
+        if ($user?->can(self::manageWindowedPermission()) && ! $user->can(self::manageAnytimePermission())) {
+            $startDay = (int) config('expense_budget.manage_window.start_day', 26);
+            $endDay = (int) config('expense_budget.manage_window.end_day', 2);
+            
+            $suffix = match($endDay) {
+                1 => 'st',
+                2 => 'nd',
+                3 => 'rd',
+                default => 'th',
+            };
+
+            return "Expense budgets can only be managed from the {$startDay}th to the {$endDay}{$suffix} of the next month in the Ethiopian Calendar.";
+        }
+
+        return 'You do not have permission to manage expense budgets.';
+    }
+
+    public static function viewHistoryDeniedMessage(): string
+    {
+        return 'You can only view activity history for your own branch or department.';
+    }
+
+    public static function isHeadOfficeBranch(?Branch $branch): bool
+    {
+        if (! $branch) {
+            return false;
+        }
+
+        if (strcasecmp($branch->branch_code ?? '', 'HO') === 0) {
+            return true;
+        }
+
+        return str_contains($branch->name, 'Head Office');
+    }
+}

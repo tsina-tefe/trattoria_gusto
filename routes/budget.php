@@ -1,9 +1,45 @@
 <?php
 
+use App\Http\Controllers\ExpenseBudgetController;
+use App\Http\Controllers\ExpenseBudgetPeriodController;
 use App\Http\Controllers\SalesBudgetController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'verified'])->group(function () {
+    $expenseBudgetViewPermissions = implode('|', [
+        config('expense_budget.permissions.view_own_department'),
+        config('expense_budget.permissions.view_own_branch'),
+        config('expense_budget.permissions.view_all_except_ho'),
+    ]);
+
+    Route::middleware("permission:{$expenseBudgetViewPermissions}")->group(function () {
+        Route::get('budget/expense-budget/export', [ExpenseBudgetController::class, 'export'])->name('expense-budget.export');
+        Route::get('budget/expense-budget', [ExpenseBudgetController::class, 'index'])->name('expense-budget.index');
+        Route::get('budget/expense-budget/submission-tracker', [ExpenseBudgetController::class, 'submissionTracker'])->name('expense-budget.submission-tracker');
+        Route::get('budget/expense-budget/items/{expenseBudget}/activity-logs', [ExpenseBudgetController::class, 'itemActivityLogs'])->name('expense-budget.items.activity-logs');
+        Route::get('budget/expense-budget/create', [ExpenseBudgetController::class, 'create'])->name('expense-budget.create');
+        Route::post('budget/expense-budget', [ExpenseBudgetController::class, 'store'])->name('expense-budget.store');
+        Route::get('budget/expense-budget/prev-budget', [ExpenseBudgetController::class, 'getPrevBudget'])->name('expense-budget.prev-budget');
+        Route::get('budget/expense-budget/budgeted-items', [ExpenseBudgetController::class, 'getBudgetedExpenseItems'])->name('expense-budget.budgeted-items');
+    });
+
+    Route::middleware('expense_budget.manage_window')->group(function () {
+        Route::patch('budget/expense-budget/items/{expenseBudget}', [ExpenseBudgetController::class, 'updateItem'])->name('expense-budget.items.update');
+        Route::delete('budget/expense-budget/items/{expenseBudget}', [ExpenseBudgetController::class, 'destroyItem'])->name('expense-budget.items.destroy');
+    });
+
+    // The company system leaves these open to any authenticated user. Opening
+    // and closing a budget period is an administrative action, so it is gated
+    // on the same permissions that allow editing budgets.
+    $expenseBudgetManagePermissions = implode('|', [
+        config('expense_budget.permissions.manage_anytime'),
+        config('expense_budget.permissions.manage_windowed'),
+    ]);
+
+    Route::middleware("permission:{$expenseBudgetManagePermissions}")->group(function () {
+        Route::resource('expense-budget-periods', ExpenseBudgetPeriodController::class)->except(['show']);
+    });
+
     Route::middleware('permission:view sales budget|manage sales budget')->group(function () {
         Route::get('budget/sales-budget/export', [SalesBudgetController::class, 'export'])->name('sales-budget.export');
         Route::get('budget/sales-budget', [SalesBudgetController::class, 'index'])->name('sales-budget.index');

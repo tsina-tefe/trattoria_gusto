@@ -2,6 +2,9 @@
 
 namespace Tests\Feature\Budget;
 
+use App\Models\ExpenseBudgetPeriod;
+use App\Models\FiscalMonth;
+use App\Models\FiscalYear;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -18,11 +21,51 @@ class BudgetSmokeTest extends TestCase
     use RefreshDatabase;
 
     /**
+     * Several Budget pages redirect away when no fiscal period is open, which
+     * is correct behaviour but hides whether the page itself renders. Give
+     * every case an open period so the pages are exercised for real.
+     */
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $fiscalYear = FiscalYear::create([
+            'name' => 'EFY 2018',
+            'gregorian_start_date' => '2025-07-08',
+            'gregorian_end_date' => '2026-07-07',
+        ]);
+
+        $fiscalMonth = FiscalMonth::create([
+            'fiscal_year_id' => $fiscalYear->id,
+            'name' => 'Hamle',
+            'efy_month_number' => 1,
+            'gregorian_start_date' => '2025-07-08',
+            'gregorian_end_date' => '2025-08-06',
+        ]);
+
+        ExpenseBudgetPeriod::create([
+            'period_name' => 'Hamle 2018',
+            'fiscal_year_id' => $fiscalYear->id,
+            'fiscal_month_id' => $fiscalMonth->id,
+            'status' => 'active',
+        ]);
+    }
+
+    /**
      * @return array<string, array{0: string, 1: list<string>}>
      */
     public static function budgetPages(): array
     {
+        $viewExpenseBudgets = ['view all branches except HO expense budgets'];
+        $manageExpenseBudgets = ['manage expense budget anytime'];
+
         return [
+            'expense budget index' => ['/budget/expense-budget', $viewExpenseBudgets],
+            'expense budget create' => ['/budget/expense-budget/create', $viewExpenseBudgets],
+            'expense budget submission tracker' => ['/budget/expense-budget/submission-tracker', $viewExpenseBudgets],
+            'expense budget export' => ['/budget/expense-budget/export', $viewExpenseBudgets],
+            'expense budget periods index' => ['/expense-budget-periods', $manageExpenseBudgets],
+            'expense budget periods create' => ['/expense-budget-periods/create', $manageExpenseBudgets],
             'sales budget index' => ['/budget/sales-budget', ['view sales budget']],
             'sales budget create' => ['/budget/sales-budget/create', ['manage sales budget']],
             'sales budget logs' => ['/budget/sales-budget/logs', ['manage sales budget']],

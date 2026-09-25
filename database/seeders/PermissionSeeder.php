@@ -183,5 +183,13 @@ class PermissionSeeder extends Seeder
         // Budget :: Sales Budget
         Permission::firstOrCreate(['name' => 'view sales budget']);
         Permission::firstOrCreate(['name' => 'manage sales budget']);
+
+        // Budget :: Expense Budget
+        // The three view permissions are mutually exclusive scopes, widest last.
+        Permission::firstOrCreate(['name' => 'view only own department expense budgets']);
+        Permission::firstOrCreate(['name' => 'view only own branch expense budgets']);
+        Permission::firstOrCreate(['name' => 'view all branches except HO expense budgets']);
+        Permission::firstOrCreate(['name' => 'manage expense budget within time window']);
+        Permission::firstOrCreate(['name' => 'manage expense budget anytime']);
     }
 }

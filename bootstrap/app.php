@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\EnsureExpenseBudgetManageWindow;
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\PowerBiApiKeyMiddleware;
@@ -29,6 +30,7 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
 
         $middleware->alias([
+            'expense_budget.manage_window' => EnsureExpenseBudgetManageWindow::class,
             'powerbi' => PowerBiApiKeyMiddleware::class,
             'permission' => PermissionMiddleware::class,
             'role' => RoleMiddleware::class,
