@@ -191,5 +191,11 @@ class PermissionSeeder extends Seeder
         Permission::firstOrCreate(['name' => 'view all branches except HO expense budgets']);
         Permission::firstOrCreate(['name' => 'manage expense budget within time window']);
         Permission::firstOrCreate(['name' => 'manage expense budget anytime']);
+
+        // Budget :: Bank Balance
+        Permission::firstOrCreate(['name' => 'manage banks']);
+        Permission::firstOrCreate(['name' => 'manage bank branches']);
+        Permission::firstOrCreate(['name' => 'view bank balance']);
+        Permission::firstOrCreate(['name' => 'manage bank balance']);
     }
 }

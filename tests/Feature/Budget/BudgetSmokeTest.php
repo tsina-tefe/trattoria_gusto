@@ -60,6 +60,11 @@ class BudgetSmokeTest extends TestCase
         $manageExpenseBudgets = ['manage expense budget anytime'];
 
         return [
+            'banks index' => ['/budget/banks', ['manage banks']],
+            'bank branches index' => ['/budget/bank-branches', ['manage bank branches']],
+            // The route middleware also admits 'view bank balance', but the
+            // controller narrows the listing to holders of the manage right.
+            'bank balances index' => ['/budget/bank-balances', ['manage bank balance']],
             'expense budget index' => ['/budget/expense-budget', $viewExpenseBudgets],
             'expense budget create' => ['/budget/expense-budget/create', $viewExpenseBudgets],
             'expense budget submission tracker' => ['/budget/expense-budget/submission-tracker', $viewExpenseBudgets],

@@ -130,6 +130,15 @@ const baseSections: NavSection[] = [
     items: [],
     groups: [
       {
+        label: 'Bank Balance',
+        icon: Building2,
+        items: [
+          { title: 'Bank Balances', href: '/budget/bank-balances', icon: Wallet, permission: 'view bank balance|manage bank balance' },
+          { title: 'Banks', href: '/budget/banks', icon: Building2, permission: 'manage banks' },
+          { title: 'Bank Branches', href: '/budget/bank-branches', icon: Globe2, permission: 'manage bank branches' },
+        ],
+      },
+      {
         label: 'Expense Budget',
         icon: ClipboardList,
         items: [
