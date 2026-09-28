@@ -123,6 +123,25 @@ const baseSections: NavSection[] = [
     ],
   },
   {
+    label: 'Performance Evaluation',
+    icon: TrendingUp,
+    items: [
+      { title: 'Evaluation Types', href: '/evaluation-types', icon: Sparkles, permission: 'view evaluation types' },
+      { title: 'Evaluation Categories', href: '/evaluation-categories', icon: ListChecks, permission: 'view evaluation categories' },
+      { title: 'Question Groups', href: '/question-groups', icon: FolderKey, permission: 'view question groups' },
+      { title: 'Questions', href: '/questions', icon: FileQuestion, permission: 'view questions' },
+      { title: 'Evaluator Groups', href: '/evaluator-groups', icon: UserCircle, permission: 'view evaluator groups' },
+      { title: 'Evaluatee Groups', href: '/evaluates-groups', icon: Target, permission: 'view evaluates groups' },
+      { title: 'All Evaluations', href: '/evaluations', icon: ClipboardCheck, permission: 'view evaluations' },
+      { title: 'Evaluation Records', href: '/evaluation-records', icon: ListChecks, permission: 'view evaluation records' },
+      { title: 'Evaluator Completion', href: '/evaluator-completion', icon: BarChart3, permission: 'view evaluator completion' },
+      { title: 'Fill Evaluation', href: '/my-evaluation', icon: ListChecks, permission: 'Fill Evaluation' },
+      { title: 'Evaluation History', href: '/my-evaluation/history', icon: History, permission: 'Evaluation History' },
+      { title: 'My Results', href: '/my-results', icon: Award, permission: 'My Results' },
+      { title: 'Rejected Evaluations', href: '/rejected-evaluations', icon: XCircle, permission: 'view rejected evaluations' },
+    ],
+  },
+  {
     // Sub-modules are appended as each phase lands. NavMain hides the whole
     // section while no item passes the permission filter.
     label: 'Budget',
@@ -134,7 +153,6 @@ const baseSections: NavSection[] = [
         icon: CalendarCheck,
         items: [
           { title: 'All Requests', href: '/budget/weekly-budget', icon: List, permission: 'view weekly budgets' },
-          { title: 'New Request', href: '/budget/weekly-budget/create', icon: Plus, permission: 'manage weekly budgets' },
           { title: 'Department Review', href: '/budget/weekly-budget/department', icon: Users, permission: 'view department budgets' },
           { title: 'Finance Review', href: '/budget/weekly-budget/finance', icon: Wallet, permission: 'view finance budgets' },
           { title: 'CEO Review', href: '/budget/weekly-budget/ceo', icon: ShieldCheck, permission: 'view ceo budgets' },
@@ -193,25 +211,6 @@ const baseSections: NavSection[] = [
           { title: 'Activity Logs', href: '/budget/sales-budget/logs', icon: History, permission: 'manage sales budget' },
         ],
       },
-    ],
-  },
-  {
-    label: 'Performance Evaluation',
-    icon: TrendingUp,
-    items: [
-      { title: 'Evaluation Types', href: '/evaluation-types', icon: Sparkles, permission: 'view evaluation types' },
-      { title: 'Evaluation Categories', href: '/evaluation-categories', icon: ListChecks, permission: 'view evaluation categories' },
-      { title: 'Question Groups', href: '/question-groups', icon: FolderKey, permission: 'view question groups' },
-      { title: 'Questions', href: '/questions', icon: FileQuestion, permission: 'view questions' },
-      { title: 'Evaluator Groups', href: '/evaluator-groups', icon: UserCircle, permission: 'view evaluator groups' },
-      { title: 'Evaluatee Groups', href: '/evaluates-groups', icon: Target, permission: 'view evaluates groups' },
-      { title: 'All Evaluations', href: '/evaluations', icon: ClipboardCheck, permission: 'view evaluations' },
-      { title: 'Evaluation Records', href: '/evaluation-records', icon: ListChecks, permission: 'view evaluation records' },
-      { title: 'Evaluator Completion', href: '/evaluator-completion', icon: BarChart3, permission: 'view evaluator completion' },
-      { title: 'Fill Evaluation', href: '/my-evaluation', icon: ListChecks, permission: 'Fill Evaluation' },
-      { title: 'Evaluation History', href: '/my-evaluation/history', icon: History, permission: 'Evaluation History' },
-      { title: 'My Results', href: '/my-results', icon: Award, permission: 'My Results' },
-      { title: 'Rejected Evaluations', href: '/rejected-evaluations', icon: XCircle, permission: 'view rejected evaluations' },
     ],
   },
 ];

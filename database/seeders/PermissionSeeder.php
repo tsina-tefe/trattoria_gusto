@@ -177,6 +177,7 @@ class PermissionSeeder extends Seeder
         Permission::firstOrCreate(['name' => 'view weekly budget summary']);
         Permission::firstOrCreate(['name' => 'view weekly budget activity logs']);
         Permission::firstOrCreate(['name' => 'manage weekly budget periods']);
+        Permission::firstOrCreate(['name' => 'add urgent budget']);
 
         // One view/manage pair per reviewer in the approval chain.
         Permission::firstOrCreate(['name' => 'view department budgets']);
