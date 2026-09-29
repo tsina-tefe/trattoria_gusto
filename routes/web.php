@@ -1,43 +1,41 @@
 <?php
 
+use App\Http\Controllers\BranchController;
+use App\Http\Controllers\DepartmentController;
+use App\Http\Controllers\EmployeeController;
+use App\Http\Controllers\EmployeeDirectoryController;
+use App\Http\Controllers\EvaluatesGroupController;
+use App\Http\Controllers\EvaluationCategoryController;
+use App\Http\Controllers\EvaluationController;
+use App\Http\Controllers\EvaluationPeriodController;
+use App\Http\Controllers\EvaluationTypeController;
+use App\Http\Controllers\EvaluatorCompletionController;
+use App\Http\Controllers\EvaluatorGroupController;
+use App\Http\Controllers\ExternalLinkController;
+use App\Http\Controllers\ExternalLinkSectionController;
+use App\Http\Controllers\FiscalMonthController;
+use App\Http\Controllers\FiscalYearController;
+use App\Http\Controllers\ManagerController;
+use App\Http\Controllers\MyEvaluationController;
+use App\Http\Controllers\OtherEvaluableController;
+use App\Http\Controllers\PageController;
+use App\Http\Controllers\PermissionController;
+use App\Http\Controllers\PositionController;
+use App\Http\Controllers\QuestionController;
+use App\Http\Controllers\QuestionGroupController;
+use App\Http\Controllers\RejectedEvaluationsController;
+use App\Http\Controllers\RoleController;
+use App\Http\Controllers\SyncController;
+use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
-use Inertia\Inertia;
-use App\Http\Controllers\{
-    DepartmentController,
-    QuestionController,
-    EvaluationTypeController,
-    EvaluatorGroupController,
-    EvaluatesGroupController,
-    EvaluationController,
-    EvaluationPeriodController,
-    FiscalYearController,
-    FiscalMonthController,
-    QuestionGroupController,
-    MyEvaluationController,
-    ManagerController,
-    OtherEvaluableController,
-    PermissionController,
-    RoleController,
-    UserController,
-    EmployeeDirectoryController,
-    BranchController,
-    PositionController,
-    EmployeeController,
-    RejectedEvaluationsController,
-    EvaluatorCompletionController,
-    SyncController,
-    EvaluationCategoryController,
-    ExternalLinkController,
-    ExternalLinkSectionController
-};
 
-Route::get('/', fn() => Inertia::render('welcome'))->name('home');
+Route::get('/', [PageController::class, 'home'])->name('home');
 
 // Offline fallback page for PWA
-Route::get('/offline', fn() => Inertia::render('offline'))->name('offline');
+Route::get('/offline', [PageController::class, 'offline'])->name('offline');
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('dashboard', fn() => Inertia::render('dashboard'))->name('dashboard');
+    Route::get('dashboard', [PageController::class, 'dashboard'])->name('dashboard');
 
     // Offline Sync API Endpoints
     Route::post('sync/evaluations', [SyncController::class, 'syncEvaluation'])->name('sync.evaluations');
@@ -49,7 +47,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             'can:view permissions',
             'can:create permissions',
             'can:update permissions',
-            'can:delete permissions'
+            'can:delete permissions',
         ]);
 
     // Roles
@@ -80,8 +78,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('evaluations', EvaluationController::class)->except(['show']);
 
     // Additional Evaluation endpoints compiled previously
-    if (file_exists(__DIR__ . '/evaluations.php')) {
-        require __DIR__ . '/evaluations.php';
+    if (file_exists(__DIR__.'/evaluations.php')) {
+        require __DIR__.'/evaluations.php';
     }
 
     Route::resource('fiscal-years', FiscalYearController::class)->except(['show']);
@@ -108,8 +106,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::delete('rejected-evaluations/{evaluationResponse}', [RejectedEvaluationsController::class, 'cancel'])->name('rejected-evaluations.cancel');
 
     Route::get('evaluator-completion', [EvaluatorCompletionController::class, 'index'])->name('evaluator-completion.index');
-
-    
 
     Route::middleware('permission:view evaluation records')->group(function () {
         Route::resource('evaluation-records', \App\Http\Controllers\EvaluationResponseController::class)
@@ -142,11 +138,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
 });
 
+require __DIR__.'/budget.php';
 
-require __DIR__ . '/budget.php';
-
-require __DIR__ . '/auth.php';
-
-
+require __DIR__.'/auth.php';
 
 require __DIR__.'/settings.php';
