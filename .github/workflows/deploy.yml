@@ -35,6 +35,8 @@ jobs:
             cd ~/trattoria-gusto
             git fetch origin main
             git reset --hard origin/main
+            mkdir -p storage/framework/sessions storage/framework/views storage/framework/cache/data storage/logs bootstrap/cache
+            chmod -R 775 storage bootstrap/cache
             rm -f public/hot
             composer install --no-dev --optimize-autoloader --no-interaction
             php artisan migrate --force --no-interaction
