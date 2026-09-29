@@ -22,3 +22,25 @@ yarn-error.log
 /.nova
 /.vscode
 /.zed
+
+# Local debug dumps — never commit
+*.log
+/cols.txt
+/cols_output.txt
+/cols_utf8.txt
+/conflicts.txt
+/costs_debug.json
+/employees_schema.json
+/evaluations.json
+/migration_failure.tx
+/migration_failure.txt
+/migration_report.json
+/migration_report.txt
+/pending_migrations.txt
+/pre_orders_cols.txt
+/resp17.json
+/schema_columns.json
+/schema_dump.txt
+/slip_debug.txt
+/abrehams.json
+/test-production.bat
