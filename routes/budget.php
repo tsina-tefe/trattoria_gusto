@@ -44,6 +44,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::middleware("permission:{$expenseBudgetManagePermissions}")->group(function () {
         Route::resource('expense-budget-periods', ExpenseBudgetPeriodController::class)->except(['show']);
+        Route::resource('expense-items', \App\Http\Controllers\ExpenseItemController::class)->except(['show']);
     });
 
     Route::middleware('permission:view sales budget|manage sales budget')->group(function () {

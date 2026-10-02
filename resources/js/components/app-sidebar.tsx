@@ -200,6 +200,12 @@ const baseSections: NavSection[] = [
             icon: CalendarDays,
             permission: 'manage expense budget anytime|manage expense budget within time window',
           },
+          {
+            title: 'Expense Items',
+            href: '/expense-items',
+            icon: List,
+            permission: 'manage expense budget anytime|manage expense budget within time window',
+          },
         ],
       },
       {
