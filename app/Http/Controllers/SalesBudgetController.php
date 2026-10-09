@@ -156,11 +156,10 @@ class SalesBudgetController extends Controller
                 $page,
                 [
                     'path' => $request->url(),
-                    'query' => $request->query(),
                 ]
             );
         } else {
-            $paginatedBudgets = $budgetQuery->paginate(10)->withQueryString();
+            $paginatedBudgets = $budgetQuery->paginate(10);
             $paginatedBudgets->getCollection()->transform(function ($budget) {
                 return [
                     'id' => $budget->id,
@@ -175,6 +174,15 @@ class SalesBudgetController extends Controller
                 ];
             });
         }
+
+        $paginatedBudgets->appends([
+            'branch_id' => $branchId ?? '',
+            'fiscal_year_id' => $fiscalYearId ?? '',
+            'fiscal_month_id' => $fiscalMonthId ?? '',
+            'ethiopian_year' => $ethiopianYear ?? '',
+            'ethiopian_month' => $ethiopianMonth ?? '',
+            'show_unbudgeted' => $showUnbudgeted ? 'true' : 'false',
+        ]);
 
         return inertia('Budget/SalesBudget/Index', [
             'budgets' => $paginatedBudgets,

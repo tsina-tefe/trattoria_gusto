@@ -13,7 +13,7 @@ export default function TablePagination({ links, total, to, from }: Pagination) 
 			<div className="flex items-center space-x-2">
 				{links.map((link, index) =>
 					link.url !== null ? (
-						<Link href={link.url || '#'} key={index}>
+						<Link href={link.url || '#'} key={index} preserveScroll preserveState>
 							<Button
 								variant={'outline'}
 								className={link.active ? 'bg-blue-500 text-white' : ''}
