@@ -52,6 +52,7 @@ import {
   Wallet,
   Plus,
   List,
+  FileCheck,
 } from 'lucide-react';
 import AppLogo from './app-logo';
 
@@ -92,6 +93,7 @@ const iconMap = {
   Plus,
   List,
   ClipboardCheck,
+  FileCheck,
 } as const;
 
 const baseSections: NavSection[] = [
@@ -217,6 +219,19 @@ const baseSections: NavSection[] = [
           { title: 'Activity Logs', href: '/budget/sales-budget/logs', icon: History, permission: 'manage sales budget' },
         ],
       },
+    ],
+  },
+  {
+    // Form items are appended as each phase lands. NavMain hides the whole
+    // section while no item passes the permission filter.
+    // Deferred: KPI Library, Evaluation Results.
+    label: 'Form',
+    icon: ClipboardList,
+    items: [
+      { title: 'All Forms', href: '/forms', icon: ListChecks, permission: 'view forms' },
+      { title: 'Fill Forms', href: '/available-forms', icon: ClipboardCheck, permission: 'fill forms' },
+      { title: 'My Submissions', href: '/my-submissions', icon: FileCheck, permission: 'view my form submissions' },
+      { title: 'All Submissions', href: '/submissions', icon: ClipboardList, permission: 'view form submissions' },
     ],
   },
 ];

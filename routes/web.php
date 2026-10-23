@@ -140,6 +140,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
 require __DIR__.'/budget.php';
 
+require __DIR__.'/forms.php';
+
 require __DIR__.'/auth.php';
 
 require __DIR__.'/settings.php';

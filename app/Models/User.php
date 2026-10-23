@@ -61,6 +61,12 @@ class User extends Authenticatable
 	{
 		return $this->hasMany(EvaluationResponse::class, 'evaluate_id');
 	}
+
+	public function form_permissions(): HasMany
+	{
+		return $this->hasMany(FormUserPermission::class);
+	}
+
 	/**
 	 * Get the attributes that should be cast.
 	 *
