@@ -40,17 +40,26 @@ class FillFormController extends Controller
 
         $version->load(['sections.questions.inputType', 'sections.questions.choices']);
 
-        $branches = \App\Models\Branch::where('is_sales_generating', 1)->select('id', 'name', 'is_sales_generating')->get();
-        $departments = \App\Models\Department::select('id', 'name')->get();
-        $employees = \App\Models\Employee::where('status', 'active')->get()->map(function ($e) {
-            return [
-                'id' => $e->id,
-                'name' => trim($e->first_name . ' ' . $e->last_name) ?: $e->employee_code,
-                'branch_id' => $e->branch_id,
-                'department_id' => $e->department_id,
-                'status' => $e->status,
-            ];
-        });
+        $branches = \App\Models\Branch::where('is_sales_generating', 1)
+            ->select('id', 'name', 'is_sales_generating')
+            ->orderBy('name')
+            ->get();
+        $departments = \App\Models\Department::select('id', 'name')
+            ->orderBy('name')
+            ->get();
+        $employees = \App\Models\Employee::where('status', 'active')
+            ->orderBy('first_name')
+            ->orderBy('last_name')
+            ->get()
+            ->map(function ($e) {
+                return [
+                    'id' => $e->id,
+                    'name' => trim($e->first_name . ' ' . $e->last_name) ?: $e->employee_code,
+                    'branch_id' => $e->branch_id,
+                    'department_id' => $e->department_id,
+                    'status' => $e->status,
+                ];
+            });
 
         return Inertia::render('Forms/Fill', [
             'form' => $form,
