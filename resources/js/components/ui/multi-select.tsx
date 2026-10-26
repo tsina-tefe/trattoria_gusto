@@ -22,6 +22,8 @@ interface MultiSelectProps {
   placeholder?: string;
   className?: string;
   showSelectedLabels?: boolean;
+  searchable?: boolean;
+  searchPlaceholder?: string;
 }
 
 export function MultiSelect({
@@ -31,8 +33,17 @@ export function MultiSelect({
   placeholder = 'Select items...',
   className,
   showSelectedLabels = true,
+  searchable = false,
+  searchPlaceholder = 'Search...',
 }: MultiSelectProps) {
   const [open, setOpen] = React.useState(false);
+  const [search, setSearch] = React.useState('');
+
+  const filteredOptions = React.useMemo(() => {
+    if (!searchable || !search.trim()) return options;
+    const q = search.trim().toLowerCase();
+    return options.filter((opt) => opt.label.toLowerCase().includes(q) || opt.value.toLowerCase().includes(q));
+  }, [options, searchable, search]);
 
   const handleSelect = (value: string) => {
     const newSelected = selected.includes(value)
@@ -42,10 +53,12 @@ export function MultiSelect({
   };
 
   const handleSelectAll = () => {
-    if (selected.length === options.length) {
-      onChange([]);
+    const visibleValues = filteredOptions.map((opt) => opt.value);
+    const allVisibleSelected = visibleValues.length > 0 && visibleValues.every((v) => selected.includes(v));
+    if (allVisibleSelected) {
+      onChange(selected.filter((v) => !visibleValues.includes(v)));
     } else {
-      onChange(options.map((opt) => opt.value));
+      onChange(Array.from(new Set([...selected, ...visibleValues])));
     }
   };
 
@@ -65,16 +78,23 @@ export function MultiSelect({
     .map((value) => options.find((opt) => opt.value === value)?.label)
     .filter(Boolean);
 
-  const isAllSelected = selected.length === options.length && options.length > 0;
+  const isAllSelected =
+    filteredOptions.length > 0 && filteredOptions.every((opt) => selected.includes(opt.value));
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover
+      open={open}
+      onOpenChange={(next) => {
+        setOpen(next);
+        if (!next) setSearch('');
+      }}
+    >
       <PopoverTrigger asChild>
         <Button
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className={cn('w-full justify-between min-h-10 h-auto py-2', className)}
+          className={cn('w-full justify-between min-h-10 h-auto py-2 bg-white', className)}
         >
           <div className="flex flex-wrap gap-1 flex-1 overflow-hidden">
             {selected.length === 0 ? (
@@ -113,11 +133,28 @@ export function MultiSelect({
           </div>
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-full p-0" align="start">
+      <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
+        {searchable ? (
+          <div className="border-b p-2">
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder={searchPlaceholder}
+              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              onClick={(e) => e.stopPropagation()}
+              onKeyDown={(e) => e.stopPropagation()}
+            />
+          </div>
+        ) : null}
         <div className="max-h-[300px] overflow-y-auto p-2">
           {options.length === 0 ? (
             <div className="py-6 text-center text-sm text-muted-foreground">
               No options available
+            </div>
+          ) : filteredOptions.length === 0 ? (
+            <div className="py-6 text-center text-sm text-muted-foreground">
+              No matches found
             </div>
           ) : (
             <div className="space-y-1">
@@ -133,7 +170,7 @@ export function MultiSelect({
                   Select All
                 </label>
               </div>
-              {options.map((option) => (
+              {filteredOptions.map((option) => (
                 <div
                   key={option.value}
                   className="flex items-center space-x-2 p-2 rounded-sm hover:bg-accent cursor-pointer"

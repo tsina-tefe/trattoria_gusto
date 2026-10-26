@@ -45,17 +45,30 @@ export default function Show({
 
         const qTypeBase = q.inputType?.type_identifier || q.input_type?.type_identifier;
 
-        if (qTypeBase === 'employee_attendance_roster') {
+        if (qTypeBase === 'employee_attendance_roster' || qTypeBase === 'employee_lookup_multiple') {
             let presentIds: string[] = [];
-            try {
-                if (matchingAns?.value_text) {
-                    const parsed = JSON.parse(matchingAns.value_text);
-                    if (Array.isArray(parsed)) presentIds = parsed.map(String);
+            const raw = matchingAns?.value_text;
+            if (Array.isArray(raw)) {
+                presentIds = raw.map(String);
+            } else if (typeof raw === 'string' && raw.trim() !== '') {
+                try {
+                    const parsed = JSON.parse(raw);
+                    if (Array.isArray(parsed)) {
+                        presentIds = parsed.map(String);
+                    } else if (raw.trim() !== '') {
+                        presentIds = [raw.trim()];
+                    }
+                } catch (e) {
+                    presentIds = [raw.trim()];
                 }
-            } catch (e) {}
+            }
 
             if (presentIds.length === 0) {
-                return <span className="text-gray-400 italic">No employees checked in</span>;
+                return (
+                    <span className="text-gray-400 italic">
+                        {qTypeBase === 'employee_attendance_roster' ? 'No employees checked in' : 'No employees selected'}
+                    </span>
+                );
             }
 
             return (
@@ -566,7 +579,9 @@ export default function Show({
                                                         }
 
                                                         const qTypeBase = inputTypeResolver?.type_identifier || '';
-                                                        const isFullWidth = qTypeBase === 'employee_evaluation_grid' || qTypeBase === 'employee_attendance_roster';
+                                                        const isFullWidth = qTypeBase === 'employee_evaluation_grid'
+                                                            || qTypeBase === 'employee_attendance_roster'
+                                                            || qTypeBase === 'employee_lookup_multiple';
 
                                                         if (isFullWidth) {
                                                             return (

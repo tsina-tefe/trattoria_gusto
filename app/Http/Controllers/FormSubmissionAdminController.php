@@ -13,6 +13,57 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class FormSubmissionAdminController extends Controller
 {
+    /**
+     * Parse employee IDs from a lookup answer value_text.
+     * Supports legacy single IDs ("42") and multi JSON arrays ("[\"42\",\"57\"]").
+     *
+     * @return list<string>
+     */
+    private function parseEmployeeLookupIds(?string $valueText): array
+    {
+        if ($valueText === null) {
+            return [];
+        }
+
+        $trimmed = trim($valueText);
+        if ($trimmed === '') {
+            return [];
+        }
+
+        if (str_starts_with($trimmed, '[')) {
+            $decoded = json_decode($trimmed, true);
+            if (is_array($decoded)) {
+                return array_values(array_filter(array_map(
+                    fn ($id) => is_numeric($id) ? (string) (int) $id : null,
+                    $decoded
+                )));
+            }
+        }
+
+        return is_numeric($trimmed) ? [(string) (int) $trimmed] : [];
+    }
+
+    private function formatEmployeeLookupNames(?string $valueText, $employeesDictionary): string
+    {
+        $ids = $this->parseEmployeeLookupIds($valueText);
+        if ($ids === []) {
+            return trim((string) $valueText);
+        }
+
+        $names = array_map(function (string $id) use ($employeesDictionary) {
+            if (isset($employeesDictionary[$id])) {
+                return $employeesDictionary[$id];
+            }
+            if (isset($employeesDictionary[(int) $id])) {
+                return $employeesDictionary[(int) $id];
+            }
+
+            return $id;
+        }, $ids);
+
+        return implode(', ', $names);
+    }
+
     private function _calculateEmployeeScores($submission, $employeesCollection)
     {
         $rosterAnswer = $submission->answers->first(function ($a) {
@@ -179,16 +230,18 @@ class FormSubmissionAdminController extends Controller
             Carbon::parse($fm->gregorian_end_date)
         ));
 
+        $employeeLookupTypes = ['employee_lookup', 'employee_lookup_multiple'];
+
         $lookupMeta = \App\Models\FormQuestion::query()
             ->whereHas('section.formVersion', fn ($q) => $q->where('form_id', $form->id))
-            ->whereHas('inputType', fn ($q) => $q->whereIn('type_identifier', ['branch_lookup', 'employee_lookup']))
+            ->whereHas('inputType', fn ($q) => $q->whereIn('type_identifier', array_merge(['branch_lookup'], $employeeLookupTypes)))
             ->with('inputType:id,type_identifier')
             ->get(['id', 'label', 'form_input_type_id']);
 
         $hasBranch = $lookupMeta->contains(fn ($q) => ($q->inputType->type_identifier ?? '') === 'branch_lookup');
-        $hasEmployee = $lookupMeta->contains(fn ($q) => ($q->inputType->type_identifier ?? '') === 'employee_lookup');
+        $hasEmployee = $lookupMeta->contains(fn ($q) => in_array($q->inputType->type_identifier ?? '', $employeeLookupTypes, true));
         $branchLabel = $lookupMeta->first(fn ($q) => ($q->inputType->type_identifier ?? '') === 'branch_lookup')?->label ?? 'Branch';
-        $employeeLabel = $lookupMeta->first(fn ($q) => ($q->inputType->type_identifier ?? '') === 'employee_lookup')?->label ?? 'Evaluated Employee';
+        $employeeLabel = $lookupMeta->first(fn ($q) => in_array($q->inputType->type_identifier ?? '', $employeeLookupTypes, true))?->label ?? 'Evaluated Employee';
 
         $statusFilter = $request->input('status', 'all');
         $submittedByFilter = $request->input('submitted_by', 'all');
@@ -242,9 +295,17 @@ class FormSubmissionAdminController extends Controller
         }
 
         if ($hasEmployee && $employeeFilter !== 'all' && ctype_digit($employeeFilter)) {
-            $query->whereHas('answers', function ($q) use ($employeeFilter) {
-                $q->where('value_text', (string) $employeeFilter)
-                    ->whereHas('question.inputType', fn ($t) => $t->where('type_identifier', 'employee_lookup'));
+            $filterId = (string) $employeeFilter;
+            $query->whereHas('answers', function ($q) use ($filterId, $employeeLookupTypes) {
+                $q->whereHas('question.inputType', fn ($t) => $t->whereIn('type_identifier', $employeeLookupTypes))
+                    ->where(function ($inner) use ($filterId) {
+                        $inner->where('value_text', $filterId)
+                            ->orWhere('value_text', 'like', '%"'.$filterId.'"%')
+                            ->orWhere('value_text', 'like', '%['.$filterId.']%')
+                            ->orWhere('value_text', 'like', '%['.$filterId.',%')
+                            ->orWhere('value_text', 'like', '%,'.$filterId.']%')
+                            ->orWhere('value_text', 'like', '%,'.$filterId.',%');
+                    });
             });
         }
 
@@ -255,7 +316,7 @@ class FormSubmissionAdminController extends Controller
         if ($pageIds !== [] && ($hasBranch || $hasEmployee)) {
             $types = array_values(array_filter([
                 $hasBranch ? 'branch_lookup' : null,
-                $hasEmployee ? 'employee_lookup' : null,
+                ...($hasEmployee ? $employeeLookupTypes : []),
             ]));
 
             $lookupAnswers = \App\Models\FormSubmissionAnswer::query()
@@ -274,8 +335,10 @@ class FormSubmissionAdminController extends Controller
                 if ($type === 'branch_lookup' && is_numeric($answer->value_text)) {
                     $pageBranchIds[] = (int) $answer->value_text;
                 }
-                if ($type === 'employee_lookup' && is_numeric($answer->value_text)) {
-                    $pageEmployeeIds[] = (int) $answer->value_text;
+                if (in_array($type, $employeeLookupTypes, true)) {
+                    foreach ($this->parseEmployeeLookupIds($answer->value_text) as $empId) {
+                        $pageEmployeeIds[] = (int) $empId;
+                    }
                 }
             }
         }
@@ -299,7 +362,8 @@ class FormSubmissionAdminController extends Controller
             $hasBranch,
             $hasEmployee,
             $branchNames,
-            $employeeNames
+            $employeeNames,
+            $employeeLookupTypes
         ) {
             $submittedAt = Carbon::parse($sub->created_at);
             $matchedYear = $fiscalYears->first(
@@ -320,11 +384,17 @@ class FormSubmissionAdminController extends Controller
                 ? $answers->first(fn ($a) => ($a->question?->inputType?->type_identifier ?? '') === 'branch_lookup')
                 : null;
             $employeeAnswer = $hasEmployee
-                ? $answers->first(fn ($a) => ($a->question?->inputType?->type_identifier ?? '') === 'employee_lookup')
+                ? $answers->first(fn ($a) => in_array($a->question?->inputType?->type_identifier ?? '', $employeeLookupTypes, true))
                 : null;
 
             $branchId = $branchAnswer && is_numeric($branchAnswer->value_text) ? (int) $branchAnswer->value_text : null;
-            $employeeId = $employeeAnswer && is_numeric($employeeAnswer->value_text) ? (int) $employeeAnswer->value_text : null;
+            $employeeIds = $employeeAnswer ? $this->parseEmployeeLookupIds($employeeAnswer->value_text) : [];
+            $employeeName = $employeeIds === []
+                ? null
+                : implode(', ', array_map(
+                    fn (string $id) => $employeeNames[(int) $id] ?? $id,
+                    $employeeIds
+                ));
 
             return [
                 'id' => $sub->id,
@@ -332,7 +402,7 @@ class FormSubmissionAdminController extends Controller
                 'submitted_by' => $sub->user?->name ?? 'Unknown User',
                 'created_at' => $sub->created_at?->toDateTimeString(),
                 'branch_name' => $branchId ? ($branchNames[$branchId] ?? (string) $branchId) : null,
-                'employee_name' => $employeeId ? ($employeeNames[$employeeId] ?? (string) $employeeId) : null,
+                'employee_name' => $employeeName,
                 'fiscal_year_id' => $matchedYear?->id,
                 'fiscal_month_id' => $matchedMonth?->id,
             ];
@@ -1055,8 +1125,8 @@ class FormSubmissionAdminController extends Controller
                             $val = $branches[$val] ?? $val;
                         } elseif ($qData['type'] === 'department_lookup') {
                             $val = $departments[$val] ?? $val;
-                        } elseif ($qData['type'] === 'employee_lookup') {
-                            $val = $employees[$val] ?? $val;
+                        } elseif ($qData['type'] === 'employee_lookup' || $qData['type'] === 'employee_lookup_multiple') {
+                            $val = $this->formatEmployeeLookupNames($val, $employees);
                         }
 
                         // Ignore huge signature payload for brevity in CSV
@@ -1308,9 +1378,8 @@ class FormSubmissionAdminController extends Controller
                 } elseif ($type === 'department_lookup') {
                     $val = trim((string) $ans->value_text);
                     $row[] = $departments[$val] ?? $val;
-                } elseif ($type === 'employee_lookup') {
-                    $val = trim((string) $ans->value_text);
-                    $row[] = $employees[$val] ?? $val;
+                } elseif ($type === 'employee_lookup' || $type === 'employee_lookup_multiple') {
+                    $row[] = $this->formatEmployeeLookupNames(trim((string) $ans->value_text), $employees);
                 } elseif (str_starts_with((string) $ans->value_text, 'data:image/')) {
                     $row[] = '[Signature Attached]';
                 } else {
@@ -1432,7 +1501,8 @@ class FormSubmissionAdminController extends Controller
             ->filter(function ($answer) {
                 $type = $answer->question?->inputType?->type_identifier ?? '';
 
-                return $type === 'employee_lookup' && is_numeric($answer->value_text);
+                return in_array($type, ['employee_lookup', 'employee_lookup_multiple'], true)
+                    && $this->parseEmployeeLookupIds($answer->value_text) !== [];
             })
             ->sortBy(function ($answer) {
                 $sectionOrder = $answer->question?->section?->order_index ?? 9999;
@@ -1446,7 +1516,13 @@ class FormSubmissionAdminController extends Controller
             return;
         }
 
-        $employee = $employeesCollection->firstWhere('id', (int) $lookup->value_text);
+        $ids = $this->parseEmployeeLookupIds($lookup->value_text);
+        $firstId = $ids[0] ?? null;
+        if ($firstId === null) {
+            return;
+        }
+
+        $employee = $employeesCollection->firstWhere('id', (int) $firstId);
         if (!$employee) {
             return;
         }

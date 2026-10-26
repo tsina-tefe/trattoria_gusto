@@ -566,7 +566,7 @@ export default function Create({ inputTypes, branches, departments }: { inputTyp
                                                                                                     </div>
                                                                                                 </div>
 
-                                                                                                {!isTitle && !isBranch && !isDepartment && selectedTypeIdentifier !== 'employee_attendance_roster' && selectedTypeIdentifier !== 'employee_lookup' && (
+                                                                                                {!isTitle && !isBranch && !isDepartment && selectedTypeIdentifier !== 'employee_attendance_roster' && selectedTypeIdentifier !== 'employee_lookup' && selectedTypeIdentifier !== 'employee_lookup_multiple' && (
                                                                                                     <div className="mt-4 pt-3 border-t">
                                                                                                         <Label className="text-xs font-semibold uppercase text-muted-foreground mb-3 block">Target Responsible Departments</Label>
                                                                                                         <MultiSelect

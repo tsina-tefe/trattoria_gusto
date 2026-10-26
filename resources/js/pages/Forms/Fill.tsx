@@ -568,18 +568,39 @@ export default function Fill({ form, formVersion, submission, parsedAnswers, bra
                     />
                 );
             case 'employee_lookup':
+            case 'employee_lookup_multiple': {
+                const isMultiEmployee = typeId === 'employee_lookup_multiple';
                 const localBranchForEmp = getAnswerForTypeInSection('branch_lookup');
                 const localDeptForEmp = getAnswerForTypeInSection('department_lookup');
                 const pool = localBranchForEmp ? (employeesByBranch[String(localBranchForEmp)] || []) : (employees || []);
+                const selectedEmployeeIds = Array.isArray(answer)
+                    ? answer.map((v: any) => String(v))
+                    : (answer !== '' && answer !== null && answer !== undefined ? [String(answer)] : []);
                 const localFilteredEmployees = pool.filter(e => {
                     const isActive = !e.status || e.status === 'active';
-                    const isCurrentlySelected = Array.isArray(answer)
-                        ? answer.includes(String(e.id))
-                        : (answer !== '' && answer !== null && answer !== undefined && String(e.id) === String(answer));
+                    const isCurrentlySelected = selectedEmployeeIds.includes(String(e.id));
                     if (!isActive && !isCurrentlySelected) return false;
                     if (localDeptForEmp && String(e.department_id) !== String(localDeptForEmp)) return false;
                     return true;
                 });
+
+                if (isMultiEmployee) {
+                    return (
+                        <MultiSelect
+                            options={localFilteredEmployees.map((e: any) => ({
+                                value: String(e.id),
+                                label: e.name || `${e.first_name || ''} ${e.last_name || ''}`.trim() || e.employee_code || String(e.id),
+                            }))}
+                            selected={selectedEmployeeIds}
+                            onChange={(val) => handleAnswerChange(question.id, val)}
+                            placeholder="Search and select employees..."
+                            searchable
+                            searchPlaceholder="Search employees..."
+                            className="max-w-xl"
+                        />
+                    );
+                }
+
                 return (
                     <SearchableSelect
                         options={localFilteredEmployees}
@@ -589,6 +610,7 @@ export default function Fill({ form, formVersion, submission, parsedAnswers, bra
                         emptyText="No employees found for the selected criteria"
                     />
                 );
+            }
             case 'employee_attendance_roster':
                 const rosterArr = Array.isArray(answer) ? answer : [];
                 const localBranch = getAnswerForTypeInSection('branch_lookup');
