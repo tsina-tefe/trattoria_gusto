@@ -1,7 +1,7 @@
 # Forms module (trattoria_gusto)
 
-Forms-core ship: builder, fill, my submissions, all submissions.  
-**Deferred:** KPI Library, Evaluation Results, external Forms API.
+Forms-core ship: builder, fill, my submissions, all submissions, Evaluation Results (scores only).  
+**Deferred:** KPI Library, Next action / Training type overrides, external Forms API.
 
 ## Safety rules
 
@@ -19,7 +19,8 @@ Forms-core ship: builder, fill, my submissions, all submissions.
 | 1 Schema + permissions | Done |
 | 2 Builder | Done |
 | 3 Fill + my submissions | Done |
-| 4 Submission admin | Done (no KPI / Evaluation Results) |
+| 4 Submission admin | Done |
+| 4b Evaluation Results | Done (no Next action / Training / KPI) |
 | 5 KPI | Deferred |
 | 6 Forms API | Deferred |
 | 7 Hardening | Smoke tests in place |
@@ -41,6 +42,7 @@ Forms-core ship: builder, fill, my submissions, all submissions.
 - Fill Forms → `/available-forms`
 - My Submissions → `/my-submissions`
 - All Submissions → `/submissions`
+- Evaluation Results → `/forms/evaluation-results`
 
 ## Deploy checklist
 

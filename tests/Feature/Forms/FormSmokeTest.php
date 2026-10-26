@@ -30,6 +30,7 @@ class FormSmokeTest extends TestCase
             'available forms' => ['/available-forms', ['fill forms']],
             'my submissions' => ['/my-submissions', ['view my form submissions']],
             'all submissions' => ['/submissions', ['view form submissions']],
+            'evaluation results' => ['/forms/evaluation-results', ['view form submissions']],
         ];
     }
 

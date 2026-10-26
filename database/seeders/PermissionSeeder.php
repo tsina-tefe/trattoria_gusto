@@ -187,7 +187,7 @@ class PermissionSeeder extends Seeder
         Permission::firstOrCreate(['name' => 'view ceo budgets']);
         Permission::firstOrCreate(['name' => 'manage ceo budgets']);
 
-        // Forms (core) — KPI Library / Evaluation Results deferred
+        // Forms (core) — KPI Library deferred
         Permission::firstOrCreate(['name' => 'view forms']);
         Permission::firstOrCreate(['name' => 'create forms']);
         Permission::firstOrCreate(['name' => 'update forms']);

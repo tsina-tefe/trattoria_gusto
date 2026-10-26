@@ -1488,12 +1488,286 @@ class FormSubmissionAdminController extends Controller
 
 
     /**
+     * Forms that can produce per-employee scores (roster, lookup, or evaluation grid).
+     *
+     * @return list<string>
+     */
+    private function scoringInputTypeIdentifiers(): array
+    {
+        return [
+            'employee_attendance_roster',
+            'employee_lookup',
+            'employee_lookup_multiple',
+            'employee_evaluation_grid',
+        ];
+    }
+
+    /**
+     * Evaluation Results: one row per employee × scoring form × fiscal month.
+     * No KPI library / Next action / Training type (deferred).
+     * Department and Employee Name are intentionally blank for now.
+     */
+    public function evaluation_results(Request $request): \Inertia\Response|StreamedResponse
+    {
+        $scoringTypes = $this->scoringInputTypeIdentifiers();
+
+        $linkedForms = Form::query()
+            ->whereHas('versions.sections.questions.inputType', function ($query) use ($scoringTypes) {
+                $query->whereIn('type_identifier', $scoringTypes);
+            })
+            ->orderBy('title')
+            ->get(['id', 'title']);
+
+        $pageState = $linkedForms->isEmpty() ? 'no_forms' : 'ready';
+
+        $fiscalYears = \App\Models\FiscalYear::orderBy('gregorian_start_date')
+            ->get(['id', 'name', 'gregorian_start_date', 'gregorian_end_date']);
+        $fiscalMonths = \App\Models\FiscalMonth::orderBy('gregorian_start_date')
+            ->get(['id', 'fiscal_year_id', 'name', 'gregorian_start_date', 'gregorian_end_date']);
+
+        $today = Carbon::today();
+        $currentFiscalYear = $fiscalYears->first(fn ($year) => $today->between(
+            Carbon::parse($year->gregorian_start_date),
+            Carbon::parse($year->gregorian_end_date)
+        ));
+        $currentFiscalMonth = $fiscalMonths->first(fn ($month) => $today->between(
+            Carbon::parse($month->gregorian_start_date),
+            Carbon::parse($month->gregorian_end_date)
+        ));
+
+        $search = trim((string) $request->input('search', ''));
+        $formFilter = (string) $request->input('form_id', 'all');
+        $statusFilter = (string) $request->input('status', 'all');
+        $yearFilter = $request->has('fiscal_year_id')
+            ? (string) $request->input('fiscal_year_id', 'all')
+            : ($currentFiscalYear?->id ? (string) $currentFiscalYear->id : 'all');
+        $monthFilter = $request->has('fiscal_month_id')
+            ? (string) $request->input('fiscal_month_id', 'all')
+            : ($currentFiscalMonth?->id ? (string) $currentFiscalMonth->id : 'all');
+
+        $rows = collect();
+
+        if ($pageState === 'ready') {
+            $formIds = $linkedForms->pluck('id')->all();
+            if ($formFilter !== 'all' && ctype_digit($formFilter) && in_array((int) $formFilter, $formIds, true)) {
+                $formIds = [(int) $formFilter];
+            }
+
+            $submissionsQuery = FormSubmission::query()
+                ->whereHas('formVersion', fn ($query) => $query->whereIn('form_id', $formIds));
+
+            if ($monthFilter !== 'all' && ctype_digit($monthFilter)) {
+                $month = $fiscalMonths->firstWhere('id', (int) $monthFilter);
+                if ($month) {
+                    $submissionsQuery->whereBetween('created_at', [
+                        Carbon::parse($month->gregorian_start_date)->startOfDay(),
+                        Carbon::parse($month->gregorian_end_date)->endOfDay(),
+                    ]);
+                }
+            } elseif ($yearFilter !== 'all' && ctype_digit($yearFilter)) {
+                $year = $fiscalYears->firstWhere('id', (int) $yearFilter);
+                if ($year) {
+                    $submissionsQuery->whereBetween('created_at', [
+                        Carbon::parse($year->gregorian_start_date)->startOfDay(),
+                        Carbon::parse($year->gregorian_end_date)->endOfDay(),
+                    ]);
+                }
+            }
+
+            $submissions = $submissionsQuery
+                ->with([
+                    'formVersion:id,form_id',
+                    'formVersion.form:id,title',
+                    'answers.question.inputType',
+                    'answers.question.choices',
+                    'answers.question.section',
+                ])
+                ->orderByDesc('id')
+                ->get();
+
+            $employees = \App\Models\Employee::query()
+                ->get(['id', 'first_name', 'last_name', 'employee_code', 'department_id', 'branch_id']);
+            $branches = \App\Models\Branch::pluck('name', 'id');
+
+            $seen = [];
+            $built = [];
+            foreach ($submissions as $submission) {
+                $this->_calculateEmployeeScores($submission, $employees);
+                $this->attachLookupSubjectScore($submission, $employees);
+
+                $submittedAt = Carbon::parse($submission->created_at);
+                $matchedYear = $fiscalYears->first(
+                    fn ($year) => $submittedAt->between(
+                        Carbon::parse($year->gregorian_start_date),
+                        Carbon::parse($year->gregorian_end_date)
+                    )
+                );
+                $matchedMonth = $fiscalMonths->first(
+                    fn ($month) => $submittedAt->between(
+                        Carbon::parse($month->gregorian_start_date),
+                        Carbon::parse($month->gregorian_end_date)
+                    )
+                );
+
+                $formId = $submission->formVersion?->form_id;
+                $formTitle = $submission->formVersion?->form?->title ?? 'Unknown form';
+                $monthKey = $matchedMonth?->id ?? 'none';
+
+                foreach ($submission->employee_scores ?? [] as $score) {
+                    $employeeId = $score['id'] ?? null;
+                    if (! $employeeId || ! $formId) {
+                        continue;
+                    }
+
+                    $dedupeKey = $employeeId.'|'.$formId.'|'.$monthKey;
+                    if (isset($seen[$dedupeKey])) {
+                        continue;
+                    }
+                    $seen[$dedupeKey] = true;
+
+                    $percentage = $score['percentage'] ?? null;
+                    $outcome = $this->postAssessmentOutcome($percentage === null ? null : (float) $percentage);
+                    $branchId = $score['branch_id'] ?? null;
+
+                    $built[] = [
+                        'employee_id' => $employeeId,
+                        // Intentionally blank for now (columns kept in UI).
+                        'employee_name' => '',
+                        'department_name' => '',
+                        'branch_name' => $branchId ? ($branches[$branchId] ?? 'Unknown branch') : '—',
+                        'form_id' => $formId,
+                        'form_title' => $formTitle,
+                        'submission_id' => $submission->id,
+                        'fiscal_year_id' => $matchedYear?->id,
+                        'fiscal_year_name' => $matchedYear?->name,
+                        'fiscal_month_id' => $matchedMonth?->id,
+                        'fiscal_month_name' => $matchedMonth?->name ?? 'Outside fiscal calendar',
+                        'score' => $percentage === null ? null : (float) $percentage,
+                        'status' => $outcome['status'],
+                        'status_label' => $outcome['status_label'],
+                    ];
+                }
+            }
+
+            $rows = collect($built)
+                ->filter(function (array $row) use ($search, $statusFilter) {
+                    if ($search !== '') {
+                        $haystack = mb_strtolower($row['branch_name'].' '.$row['form_title']);
+                        if (! str_contains($haystack, mb_strtolower($search))) {
+                            return false;
+                        }
+                    }
+                    if ($statusFilter !== 'all' && $row['status'] !== $statusFilter) {
+                        return false;
+                    }
+
+                    return true;
+                })
+                ->sortBy([
+                    ['branch_name', 'asc'],
+                    ['form_title', 'asc'],
+                    ['employee_id', 'asc'],
+                ])
+                ->values();
+        }
+
+        $summary = [
+            'rows' => $rows->count(),
+            'employees' => $rows->pluck('employee_id')->unique()->count(),
+            'pass' => $rows->where('status', 'pass')->count(),
+            'fail' => $rows->where('status', 'fail')->count(),
+            'not_scored' => $rows->where('status', 'not_scored')->count(),
+        ];
+
+        if ($request->input('export') === 'csv') {
+            return $this->streamEvaluationResultsCsv($rows);
+        }
+
+        $perPage = 25;
+        $page = max(1, (int) $request->input('page', 1));
+        $paginator = new LengthAwarePaginator(
+            $rows->forPage($page, $perPage)->values(),
+            $rows->count(),
+            $perPage,
+            $page,
+            [
+                'path' => $request->url(),
+                'query' => $request->query(),
+            ]
+        );
+
+        return Inertia::render('Forms/EvaluationResults', [
+            'pageState' => $pageState,
+            'linkedForms' => $linkedForms->map(fn ($form) => [
+                'id' => $form->id,
+                'title' => $form->title,
+            ])->values(),
+            'rows' => $paginator,
+            'summary' => $summary,
+            'fiscalYears' => $fiscalYears->map(fn ($year) => ['id' => $year->id, 'name' => $year->name])->values(),
+            'fiscalMonths' => $fiscalMonths->map(fn ($month) => [
+                'id' => $month->id,
+                'fiscal_year_id' => $month->fiscal_year_id,
+                'name' => $month->name,
+            ])->values(),
+            'filters' => [
+                'search' => $search,
+                'form_id' => $formFilter,
+                'status' => $statusFilter,
+                'fiscal_year_id' => $yearFilter,
+                'fiscal_month_id' => $monthFilter,
+            ],
+        ]);
+    }
+
+    /**
+     * @param  \Illuminate\Support\Collection<int, array<string, mixed>>  $rows
+     */
+    private function streamEvaluationResultsCsv($rows): StreamedResponse
+    {
+        $filename = 'evaluation_results_'.date('Y-m-d').'.csv';
+
+        return response()->streamDownload(function () use ($rows) {
+            $file = fopen('php://output', 'w');
+            fputs($file, "\xEF\xBB\xBF");
+            fputcsv($file, [
+                'branch',
+                'department',
+                'employee_id',
+                'employee_name',
+                'form',
+                'fiscal_year',
+                'fiscal_month',
+                'score',
+                'status',
+            ]);
+            foreach ($rows as $row) {
+                fputcsv($file, [
+                    $row['branch_name'],
+                    $row['department_name'],
+                    $row['employee_id'],
+                    $row['employee_name'],
+                    $row['form_title'],
+                    $row['fiscal_year_name'] ?? '',
+                    $row['fiscal_month_name'] ?? '',
+                    $row['score'] === null ? '' : number_format((float) $row['score'], 1, '.', ''),
+                    $row['status_label'] ?? '',
+                ]);
+            }
+            fclose($file);
+        }, $filename, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+        ]);
+    }
+
+    /**
      * Checklists identify the assessed person with an employee lookup, not a roster.
-     * The first lookup is the subject. Later lookups are sign-off names and are skipped.
+     * The first lookup question is the subject (single or multiple). Later lookups are skipped.
+     * One score row per selected employee.
      */
     private function attachLookupSubjectScore($submission, $employeesCollection): void
     {
-        if (!empty($submission->employee_scores)) {
+        if (! empty($submission->employee_scores)) {
             return;
         }
 
@@ -1512,28 +1786,29 @@ class FormSubmissionAdminController extends Controller
             })
             ->first();
 
-        if (!$lookup) {
+        if (! $lookup) {
             return;
         }
 
-        $ids = $this->parseEmployeeLookupIds($lookup->value_text);
-        $firstId = $ids[0] ?? null;
-        if ($firstId === null) {
-            return;
+        $scores = [];
+        foreach ($this->parseEmployeeLookupIds($lookup->value_text) as $id) {
+            $employee = $employeesCollection->firstWhere('id', (int) $id);
+            if (! $employee) {
+                continue;
+            }
+
+            $scores[] = [
+                'id' => $employee->id,
+                'name' => trim($employee->first_name.' '.$employee->last_name) ?: $employee->employee_code,
+                'department_id' => $employee->department_id,
+                'branch_id' => $employee->branch_id,
+                'percentage' => $submission->calculated_score,
+            ];
         }
 
-        $employee = $employeesCollection->firstWhere('id', (int) $firstId);
-        if (!$employee) {
-            return;
+        if ($scores !== []) {
+            $submission->employee_scores = $scores;
         }
-
-        $submission->employee_scores = [[
-            'id' => $employee->id,
-            'name' => trim($employee->first_name . ' ' . $employee->last_name) ?: $employee->employee_code,
-            'department_id' => $employee->department_id,
-            'branch_id' => $employee->branch_id,
-            'percentage' => $submission->calculated_score,
-        ]];
     }
 
     private function postAssessmentOutcome(?float $score): array
@@ -1556,16 +1831,5 @@ class FormSubmissionAdminController extends Controller
             'status' => 'fail',
             'status_label' => 'Fail',
         ];
-    }
-
-    private function nextActionLabel(string $nextAction): string
-    {
-        return match ($nextAction) {
-            'na' => 'NA',
-            'warning' => 'Warning',
-            'training' => 'Training',
-            'not_scored' => 'Not scored',
-            default => ucfirst(str_replace('_', ' ', $nextAction)),
-        };
     }
 }

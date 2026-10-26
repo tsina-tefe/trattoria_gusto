@@ -21,6 +21,7 @@ import {
   CalendarCheck,
   CalendarDays,
   ClipboardList,
+  GraduationCap,
   FileQuestion,
   FolderKey,
   Globe2,
@@ -224,7 +225,7 @@ const baseSections: NavSection[] = [
   {
     // Form items are appended as each phase lands. NavMain hides the whole
     // section while no item passes the permission filter.
-    // Deferred: KPI Library, Evaluation Results.
+    // Deferred: KPI Library.
     label: 'Form',
     icon: ClipboardList,
     items: [
@@ -232,6 +233,7 @@ const baseSections: NavSection[] = [
       { title: 'Fill Forms', href: '/available-forms', icon: ClipboardCheck, permission: 'fill forms' },
       { title: 'My Submissions', href: '/my-submissions', icon: FileCheck, permission: 'view my form submissions' },
       { title: 'All Submissions', href: '/submissions', icon: ClipboardList, permission: 'view form submissions' },
+      { title: 'Evaluation Results', href: '/forms/evaluation-results', icon: GraduationCap, permission: 'view form submissions' },
     ],
   },
 ];

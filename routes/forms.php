@@ -11,7 +11,8 @@ use Illuminate\Support\Facades\Route;
 | Forms module routes (core)
 |--------------------------------------------------------------------------
 |
-| Deferred: KPI Library, Evaluation Results, external Forms API.
+| Deferred: KPI Library, external Forms API.
+| Evaluation Results: scores only (no Next action / Training type / KPI gating).
 |
 */
 
@@ -31,6 +32,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Shared show (fill path + admin) — auth only; controller enforces ownership/ACL
     Route::get('submissions/{submission}', [FormSubmissionAdminController::class, 'show'])->name('forms.submissions.show');
+
+    // Evaluation Results — registered before forms resource so slug is not captured as form id
+    Route::middleware('permission:view form submissions')->group(function () {
+        Route::get('forms/evaluation-results', [FormSubmissionAdminController::class, 'evaluation_results'])
+            ->name('forms.evaluation-results');
+    });
 
     // Builder
     Route::middleware('permission:view forms')->group(function () {
