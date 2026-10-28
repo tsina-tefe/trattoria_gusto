@@ -14,6 +14,7 @@ type FiscalOption = { id: number; name: string; fiscal_year_id?: number };
 
 type ResultRow = {
 	employee_id: number;
+	employee_count: number;
 	employee_name: string;
 	department_name: string;
 	branch_name: string;
@@ -141,8 +142,8 @@ export default function EvaluationResults({
 				<div>
 					<h2 className="text-2xl font-bold tracking-tight text-amber-900">Evaluation Results</h2>
 					<p className="text-muted-foreground">
-						Employees scored on forms with attendance roster, employee lookup, or evaluation grid.
-						Pass is 75 or above.
+						One row per submission on forms with attendance roster, employee lookup, or evaluation grid.
+						Score is the average across assessed employees. Pass is 75 or above.
 					</p>
 				</div>
 
@@ -267,7 +268,7 @@ export default function EvaluationResults({
 									<TableRow>
 										<TableHead>Branch</TableHead>
 										<TableHead>Department</TableHead>
-										<TableHead>Employee Name</TableHead>
+										<TableHead>Employees</TableHead>
 										<TableHead>Form</TableHead>
 										<TableHead>Fiscal month</TableHead>
 										<TableHead className="text-right">Score</TableHead>
@@ -280,15 +281,13 @@ export default function EvaluationResults({
 										<TableRow>
 											<TableCell colSpan={8} className="py-12 text-center text-gray-500">
 												{summary.rows === 0
-													? 'No employees have an assessment matching these filters.'
+													? 'No submissions match these filters.'
 													: 'No rows match these filters.'}
 											</TableCell>
 										</TableRow>
 									) : (
 										rows.data.map((row) => (
-											<TableRow
-												key={`${row.employee_id}-${row.form_id}-${row.fiscal_month_id ?? 'none'}-${row.submission_id}`}
-											>
+											<TableRow key={row.submission_id}>
 												<TableCell>{row.branch_name}</TableCell>
 												<TableCell>{row.department_name || '—'}</TableCell>
 												<TableCell className="font-medium text-gray-900">

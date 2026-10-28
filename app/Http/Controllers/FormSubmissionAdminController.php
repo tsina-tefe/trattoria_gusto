@@ -1511,9 +1511,9 @@ class FormSubmissionAdminController extends Controller
     }
 
     /**
-     * Evaluation Results: one row per employee × scoring form × fiscal month.
-     * No KPI library / Next action / Training type (deferred).
-     * Department and Employee Name are intentionally blank for now.
+     * Evaluation Results: one row per submission (aggregate score + employee count).
+     * Per-employee rows deferred until KPI Library features land.
+     * No Next action / Training type (deferred).
      */
     public function evaluation_results(Request $request): \Inertia\Response|StreamedResponse
     {
@@ -1597,11 +1597,16 @@ class FormSubmissionAdminController extends Controller
                 ->get(['id', 'first_name', 'last_name', 'employee_code', 'department_id', 'branch_id']);
             $branches = \App\Models\Branch::pluck('name', 'id');
 
-            $seen = [];
             $built = [];
             foreach ($submissions as $submission) {
                 $this->_calculateEmployeeScores($submission, $employees);
                 $this->attachLookupSubjectScore($submission, $employees);
+
+                $scores = collect($submission->employee_scores ?? []);
+                $formId = $submission->formVersion?->form_id;
+                if ($scores->isEmpty() || ! $formId) {
+                    continue;
+                }
 
                 $submittedAt = Carbon::parse($submission->created_at);
                 $matchedYear = $fiscalYears->first(
@@ -1617,50 +1622,50 @@ class FormSubmissionAdminController extends Controller
                     )
                 );
 
-                $formId = $submission->formVersion?->form_id;
-                $formTitle = $submission->formVersion?->form?->title ?? 'Unknown form';
-                $monthKey = $matchedMonth?->id ?? 'none';
+                $percentages = $scores
+                    ->pluck('percentage')
+                    ->filter(fn ($percentage) => $percentage !== null)
+                    ->map(fn ($percentage) => (float) $percentage)
+                    ->values();
 
-                foreach ($submission->employee_scores ?? [] as $score) {
-                    $employeeId = $score['id'] ?? null;
-                    if (! $employeeId || ! $formId) {
-                        continue;
-                    }
+                $aggregateScore = $percentages->isNotEmpty()
+                    ? round((float) $percentages->avg(), 1)
+                    : ($submission->calculated_score !== null ? (float) $submission->calculated_score : null);
 
-                    $dedupeKey = $employeeId.'|'.$formId.'|'.$monthKey;
-                    if (isset($seen[$dedupeKey])) {
-                        continue;
-                    }
-                    $seen[$dedupeKey] = true;
+                $outcome = $this->postAssessmentOutcome($aggregateScore);
+                $employeeCount = $scores->count();
 
-                    $percentage = $score['percentage'] ?? null;
-                    $outcome = $this->postAssessmentOutcome($percentage === null ? null : (float) $percentage);
-                    $branchId = $score['branch_id'] ?? null;
+                $branchLookupAnswer = $submission->answers->first(
+                    fn ($answer) => ($answer->question?->inputType?->type_identifier ?? '') === 'branch_lookup'
+                        && is_numeric($answer->value_text)
+                );
+                $branchId = $branchLookupAnswer
+                    ? (int) $branchLookupAnswer->value_text
+                    : ($scores->first()['branch_id'] ?? null);
 
-                    $built[] = [
-                        'employee_id' => $employeeId,
-                        // Intentionally blank for now (columns kept in UI).
-                        'employee_name' => '',
-                        'department_name' => '',
-                        'branch_name' => $branchId ? ($branches[$branchId] ?? 'Unknown branch') : '—',
-                        'form_id' => $formId,
-                        'form_title' => $formTitle,
-                        'submission_id' => $submission->id,
-                        'fiscal_year_id' => $matchedYear?->id,
-                        'fiscal_year_name' => $matchedYear?->name,
-                        'fiscal_month_id' => $matchedMonth?->id,
-                        'fiscal_month_name' => $matchedMonth?->name ?? 'Outside fiscal calendar',
-                        'score' => $percentage === null ? null : (float) $percentage,
-                        'status' => $outcome['status'],
-                        'status_label' => $outcome['status_label'],
-                    ];
-                }
+                $built[] = [
+                    'employee_id' => (int) ($scores->first()['id'] ?? 0),
+                    'employee_count' => $employeeCount,
+                    'employee_name' => $employeeCount === 1 ? '1 employee' : $employeeCount.' employees',
+                    'department_name' => '—',
+                    'branch_name' => $branchId ? ($branches[$branchId] ?? 'Unknown branch') : '—',
+                    'form_id' => $formId,
+                    'form_title' => $submission->formVersion?->form?->title ?? 'Unknown form',
+                    'submission_id' => $submission->id,
+                    'fiscal_year_id' => $matchedYear?->id,
+                    'fiscal_year_name' => $matchedYear?->name,
+                    'fiscal_month_id' => $matchedMonth?->id,
+                    'fiscal_month_name' => $matchedMonth?->name ?? 'Outside fiscal calendar',
+                    'score' => $aggregateScore,
+                    'status' => $outcome['status'],
+                    'status_label' => $outcome['status_label'],
+                ];
             }
 
             $rows = collect($built)
                 ->filter(function (array $row) use ($search, $statusFilter) {
                     if ($search !== '') {
-                        $haystack = mb_strtolower($row['branch_name'].' '.$row['form_title']);
+                        $haystack = mb_strtolower($row['branch_name'].' '.$row['form_title'].' '.$row['employee_name']);
                         if (! str_contains($haystack, mb_strtolower($search))) {
                             return false;
                         }
@@ -1672,16 +1677,16 @@ class FormSubmissionAdminController extends Controller
                     return true;
                 })
                 ->sortBy([
-                    ['branch_name', 'asc'],
                     ['form_title', 'asc'],
-                    ['employee_id', 'asc'],
+                    ['branch_name', 'asc'],
+                    ['submission_id', 'desc'],
                 ])
                 ->values();
         }
 
         $summary = [
             'rows' => $rows->count(),
-            'employees' => $rows->pluck('employee_id')->unique()->count(),
+            'employees' => (int) $rows->sum('employee_count'),
             'pass' => $rows->where('status', 'pass')->count(),
             'fail' => $rows->where('status', 'fail')->count(),
             'not_scored' => $rows->where('status', 'not_scored')->count(),
@@ -1741,25 +1746,27 @@ class FormSubmissionAdminController extends Controller
             fputcsv($file, [
                 'branch',
                 'department',
-                'employee_id',
-                'employee_name',
+                'employee_count',
+                'employees',
                 'form',
                 'fiscal_year',
                 'fiscal_month',
                 'score',
                 'status',
+                'submission_id',
             ]);
             foreach ($rows as $row) {
                 fputcsv($file, [
                     $row['branch_name'],
                     $row['department_name'],
-                    $row['employee_id'],
+                    $row['employee_count'] ?? '',
                     $row['employee_name'],
                     $row['form_title'],
                     $row['fiscal_year_name'] ?? '',
                     $row['fiscal_month_name'] ?? '',
                     $row['score'] === null ? '' : number_format((float) $row['score'], 1, '.', ''),
                     $row['status_label'] ?? '',
+                    $row['submission_id'] ?? '',
                 ]);
             }
             fclose($file);
